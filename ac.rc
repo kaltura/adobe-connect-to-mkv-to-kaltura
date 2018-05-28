@@ -1,4 +1,6 @@
 OUTDIR=/tmp/ac_out
+
+# set to false if your recordings do not require an AC session [i.e: no login is required]
 AC_LOGIN_REQUIRED="true"
 AC_ENDPOINT=""
 AC_USERNAME=""
