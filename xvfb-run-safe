@@ -1,0 +1,23 @@
+#!/bin/bash
+# allow settings to be overridden via ENV vars
+: "${XVFB_LOCKDIR:=$HOME/.xvfb-locks}"
+: "${XVFB_DISPLAY_MIN:=99}"
+: "${XVFB_DISPLAY_MAX:=599}"
+
+# assuming only one user will be using this, place the locks in the home directory
+# to avoid vulnerability to symlink attacks.
+# if multiple users are to make use of this wrapper concurrently, you should write to /tmp instead
+mkdir -p -- "$XVFB_LOCKDIR" || exit
+
+i=$XVFB_DISPLAY_MIN
+while (( i < XVFB_DISPLAY_MAX )); do
+  if [ -f "/tmp/.X${i}-lock" ]; then                # avoid an obvious open display
+    (( ++i )); continue
+  fi
+  exec 5>"$XVFB_LOCKDIR/$i" || continue           # open a lockfile
+  if flock -x -n 5; then                          # attempt lock
+    export X_SERVER_DISPLAY_NUM=$i		  # export selected display for use in subsequent scripts
+    exec xvfb-run --server-num="$i" "$@" || exit  # once locked, run xvfb-run on selected display 
+  fi
+  (( i++ ))
+done
