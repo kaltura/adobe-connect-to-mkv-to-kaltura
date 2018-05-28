@@ -23,7 +23,7 @@ This code generates MKV files out of AC recordings and ingests them onto Kaltura
 ## Configuration
 
 ### ENV vars
-Set the needed values in ac.rc and make sure it is sourced before running the wrapper as the
+Set the needed values in `ac.rc` and make sure it is sourced before running the wrapper as the
 various scripts rely on the ENV vars it exports. You can just add:
 ```sh
 . /path/to/ac.rc
