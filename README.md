@@ -20,7 +20,9 @@ This code generates MKV files out of AC recordings and ingests them onto Kaltura
 - FFmpeg [with x11grab support, tested with 2.8.14 and 3.4.2 as available by installing Ubuntu's `ffmpeg` package]
 - The Mozilla [Geckodriver](https://github.com/mozilla/geckodriver/releases) [tested with v0.20.1]:
 
-## Running
+## Configuration
+
+### ENV vars
 Set the needed values in ac.rc and make sure it is sourced before running the wrapper as the
 various scripts rely on the ENV vars it exports. You can just add:
 ```sh
@@ -34,22 +36,35 @@ FFMPEG_BIN=/path/to/ffmpeg
 FFPROBE_BIN=/path/to/ffprobe
 ```
 
+### Generate recording input list
+`generate_recording_list.rb` can be used to generate a CSV containing the recordings metadata.
+It accepts a text file with all the SCO IDs, separated by newlines; i.e one SCO ID per line, makes the needed AC API calls and outputs the data in the following format:
+```csv
+SCO-ID, SCO-FOLDER-NAME, SCO-NAME, PATH-URL
+```
+
+To generate a list of recordings to process, run:
+```sh
+$ ./generate_recording_list.rb /path/to/sco/ids/file > /path/to/asset/list/csv
+```
+
+### Parallel processing
+This code is capable of processing multiple recordings concurrently and the only real limitation is HW resources [namely: CPU, RAM].
+
 In order to process several recordings simultaneously, a wrapper around `xvfb-run` is needed. 
 `xvfb-run-safe` needs to be placed somewhere in PATH or else, you can change `ac_wrapper.sh` so
 that it looks for it elsewhere.
 The number of concurrent jobs to run is determined in `ac_wrapper.sh` based on the value of the `MAX_CONCUR_PROCS` ENV var.
 
-`generate_recording_list.rb` can be used to generate a CSV containing the recordings metadata.
-It accepts a text file with all the SCO IDs, separated by newlines; i.e one SCO ID per line.
-
+### Running
 Once ready, run:
 ```sh
-$ ac_wrapper.sh </path/to/asset/list/file>
+$ ac_wrapper.sh </path/to/asset/list/csv>
 ``` 
 
-Where `</path/to/asset/list/file>` is the path to a CSV file in the format described above.
+Where `</path/to/asset/list/csv>` is the path to a CSV file in the format described above.
 
-This code is capable of processing multiple recordings concurrently and the only real limitation is HW resources [namely: CPU, RAM].
+
 
 ## Output
 The resulting KMVs will be placed under `$OUTDIR/$RECORDING_ID.full.mkv`.
