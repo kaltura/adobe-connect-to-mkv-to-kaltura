@@ -36,7 +36,19 @@ FFMPEG_BIN=/path/to/ffmpeg
 FFPROBE_BIN=/path/to/ffprobe
 ```
 
-### Generate recording input list
+### The `AC_LOGIN_REQUIRED` ENV var
+If your AC instance does not require the user to login in order to play the recording, you can set the value of `AC_LOGIN_REQUIRED` to false to skip that step.
+The code in `ac_new.rb` assumes that the user and passwd text field IDs are `name` and `pwd` respectively and that the submit button ID is `login-button`.
+If that's not the case in your AC I/F, you will need to change the code accordingly.
+
+The code further assumes the login URL is:
+```ruby
+@base_url + "/system/login?logintype=oldstyle&next=/admin"
+```
+
+You may need to adjust that as well.
+
+### Generating the recording list to process
 `generate_recording_list.rb` can be used to generate a CSV containing the recordings metadata.
 It accepts a text file with all the SCO IDs, separated by newlines; i.e one SCO ID per line, makes the needed AC API calls and outputs the data in the following format:
 ```csv

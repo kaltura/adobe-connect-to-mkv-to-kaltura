@@ -88,10 +88,12 @@ class Vconn1 < Test::Unit::TestCase
     # since AC takes forever to load the recording, add 2 minutes to the actual recording's duration, we'll cut the extra off later
     extra_duration=dur_sec.to_f + 120
 
-    @driver.get(@base_url + "/system/login?logintype=oldstyle&next=/admin")
-    @driver.find_element(:id, "name").send_keys ENV['AC_USERNAME']
-    @driver.find_element(:id, "pwd").send_keys ENV['AC_PASSWD']
-    @driver.find_element(:id, "login-button").click
+    if ENV['AC_LOGIN_REQUIRED'] === "true"
+      @driver.get(@base_url + "/system/login?logintype=oldstyle&next=/admin")
+      @driver.find_element(:id, "name").send_keys ENV['AC_USERNAME']
+      @driver.find_element(:id, "pwd").send_keys ENV['AC_PASSWD']
+      @driver.find_element(:id, "login-button").click
+    end
     @driver.get(@base_url + "/" + meeting_id +"?launcher=false&fcsContent=true&pbMode=normal")
 
     # FFmpeg magic

@@ -1,7 +1,9 @@
 OUTDIR=/tmp/ac_out
+AC_LOGIN_REQUIRED="true"
 AC_ENDPOINT=""
 AC_USERNAME=""
 AC_PASSWD=""
+
 
 # num of concurrent jobs to run, should be adjusted based on available HW resources
 MAX_CONCUR_PROCS_PROCS=7
