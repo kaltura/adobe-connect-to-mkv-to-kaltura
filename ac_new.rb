@@ -15,21 +15,22 @@ class Vconn1 < Test::Unit::TestCase
 
 
   def setup
-	@logger = Logger.new(STDOUT)
-	@logger.level = Logger::INFO
+    @logger = Logger.new(STDOUT)
+    @logger.level = Logger::INFO
 
-	@logger.formatter = proc do |severity, datetime, progname, msg| 
-		fileLine = "";
-		caller.each do |clr|
-			unless(/\/logger.rb:/ =~ clr) 
-				fileLine = clr; 
-				break;
-			end  
+    @logger.formatter = proc do |severity, datetime, progname, msg| 
+	fileLine = "";
+	caller.each do |clr|
+		unless(/\/logger.rb:/ =~ clr) 
+			fileLine = clr; 
+			break;
 		end  
-		fileLine = fileLine.split(':in `',2)[0];
-		fileLine.sub!(/:(\d)/, '(\1');
-		"#{datetime}: #{severity} #{fileLine}): #{msg}\n"
-	end
+	end  
+	fileLine = fileLine.split(':in `',2)[0];
+	fileLine.sub!(/:(\d)/, '(\1');
+	"#{datetime}: #{severity} #{fileLine}): #{msg}\n"
+    end
+
     @profile = Selenium::WebDriver::Firefox::Profile.new
     @profile["plugin.state.flash"] = 2
     @profile["plugins.flashBlock.enabled"] = 0
@@ -74,8 +75,8 @@ class Vconn1 < Test::Unit::TestCase
 	    ffprobe_bin='ffprobe'
     end
     recording_file=out_dir + meeting_id + '.mkv'
-    full_recording_file=out_dir + meeting_id + ".full.mkv"
     audio_file=out_dir + meeting_id + ".mp3"
+    full_recording_file=out_dir + meeting_id + ".full.mkv"
 
     # get duration from the MP3 file, we'll use that to determine how long ffmpeg should be recording for 
     duration, stdeerr, status = Open3.capture3(ffprobe_bin + " -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "+audio_file.shellescape)

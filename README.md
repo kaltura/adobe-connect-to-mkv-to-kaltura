@@ -26,7 +26,7 @@ various scripts rely on the ENV vars it exports. You can just add:
 ```sh
 . /path/to/ac.rc
 ```
-to `~/.bashrc`, `/etc/profile` or place it under /etc/profile.d
+to `~/.bashrc`, `/etc/profile` or place it under `/etc/profile.d`
 
 In the event you'd like to use `ffmpeg` and `ffprobe` binaries from alt locations [i.e: not what's first in PATH], you can export:
 ```sh
