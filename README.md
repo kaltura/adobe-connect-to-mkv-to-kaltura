@@ -40,7 +40,7 @@ FFPROBE_BIN=/path/to/ffprobe
 `generate_recording_list.rb` can be used to generate a CSV containing the recordings metadata.
 It accepts a text file with all the SCO IDs, separated by newlines; i.e one SCO ID per line, makes the needed AC API calls and outputs the data in the following format:
 ```csv
-SCO-ID, SCO-FOLDER-NAME, SCO-NAME, PATH-URL
+SCO-ID,SCO-FOLDER-NAME,SCO-NAME,PATH-URL
 ```
 
 To generate a list of recordings to process, run:
@@ -56,7 +56,7 @@ In order to process several recordings simultaneously, a wrapper around `xvfb-ru
 that it looks for it elsewhere.
 The number of concurrent jobs to run is determined in `ac_wrapper.sh` based on the value of the `MAX_CONCUR_PROCS` ENV var.
 
-### Running
+## Running
 Once ready, run:
 ```sh
 $ ac_wrapper.sh </path/to/asset/list/csv>
