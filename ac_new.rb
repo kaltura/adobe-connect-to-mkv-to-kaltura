@@ -58,10 +58,13 @@ class Vconn1 < Test::Unit::TestCase
   
   def test_vconn1
 
+    # read mandatory ENV params
     out_dir=ENV['OUTDIR'] + '/'
     meeting_id=ENV['MEETING_ID']
     entry_name=ENV['MEETING_NAME']
     cat_name=ENV['CATEGORY_NAME']
+    ac_user=ENV['AC_USERNAME']
+    ac_passwd=ENV['AC_PASSWD']
 
     if ENV['FFMPEG_BIN']
 	    ffmpeg_bin=ENV['FFMPEG_BIN']
@@ -74,12 +77,13 @@ class Vconn1 < Test::Unit::TestCase
     else
 	    ffprobe_bin='ffprobe'
     end
+    
     recording_file=out_dir + meeting_id + '.mkv'
-    audio_file=out_dir + meeting_id + ".mp3"
-    full_recording_file=out_dir + meeting_id + ".full.mkv"
+    audio_file=out_dir + meeting_id + '.mp3'
+    full_recording_file=out_dir + meeting_id + '.full.mkv'
 
     # get duration from the MP3 file, we'll use that to determine how long ffmpeg should be recording for 
-    duration, stdeerr, status = Open3.capture3(ffprobe_bin + " -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "+audio_file.shellescape)
+    duration, stdeerr, status = Open3.capture3(ffprobe_bin + " -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " + audio_file.shellescape)
     if ! status.success?
       log.error('Failed to get audio track duration. Exited with ' + $?.exitstatus.to_s + ':(')
       return false
@@ -90,8 +94,8 @@ class Vconn1 < Test::Unit::TestCase
 
     if ENV['AC_LOGIN_REQUIRED'] === "true"
       @driver.get(@base_url + "/system/login?logintype=oldstyle&next=/admin")
-      @driver.find_element(:id, "name").send_keys ENV['AC_USERNAME']
-      @driver.find_element(:id, "pwd").send_keys ENV['AC_PASSWD']
+      @driver.find_element(:id, "name").send_keys ac_username
+      @driver.find_element(:id, "pwd").send_keys ac_passwd
       @driver.find_element(:id, "login-button").click
     end
     @driver.get(@base_url + "/" + meeting_id +"?launcher=false&fcsContent=true&pbMode=normal")
@@ -143,16 +147,21 @@ class Vconn1 < Test::Unit::TestCase
       return false
     end
 
-    # ingest to Kaltura
-    if ENV['KALTURA_BASE_ENDPOINT'] and ENV['KALTURA_PARTNER_ID'] and ENV['KALTURA_PARTNER_SECRET']
-      ingest_to_kaltura(ENV['KALTURA_BASE_ENDPOINT'],ENV['KALTURA_PARTNER_ID'], ENV['KALTURA_PARTNER_SECRET'], ENV['KALTURA_CAT_ID'], cat_name,entry_name,full_recording_file)
-    else
-      @logger.warn("Skipping Kaltura ingestion, missing KALTURA_BASE_ENDPOINT, KALTURA_PARTNER_ID or KALTURA_PARTNER_SECRET ENV vars")
+    # verify the Kaltura params are set before attempting to ingest to Kaltura
+    kaltura_mandatory_vars = ['KALTURA_BASE_ENDPOINT', 'KALTURA_PARTNER_ID', 'KALTURA_PARTNER_SECRET', 'KALTURA_CAT_ID', 'KALTURA_ROOT_CATEGORY_PATH'] 
+    
+    kaltura_mandatory_vars.each do |mandatory_var|
+      if ! ENV[mandatory_var] or ENV[mandatory_var].empty?
+	@logger.warn('Skipping Kaltura ingestion, missing ENV var ' + mandatory_var)
+	return
+      end
     end
+    
+    ingest_to_kaltura(ENV['KALTURA_BASE_ENDPOINT'],ENV['KALTURA_PARTNER_ID'], ENV['KALTURA_PARTNER_SECRET'], ENV['KALTURA_CAT_ID'], ENV['KALTURA_ROOT_CATEGORY_PATH'], cat_name, entry_name, meeting_id, full_recording_file)
   end
 
 
-  def ingest_to_kaltura(base_endpoint,partner_id, secret, parent_cat_id, cat_name, entry_name,vid_file_path)
+  def ingest_to_kaltura(base_endpoint,partner_id, secret, parent_cat_id, full_cat_path, cat_name, entry_name, meeting_id, vid_file_path)
     config = KalturaConfiguration.new()
     config.service_url = base_endpoint
     client = KalturaClient.new(config);
@@ -167,7 +176,6 @@ class Vconn1 < Test::Unit::TestCase
 
     # check whether category already exists
     filter = KalturaCategoryFilter.new()
-    full_cat_path=ENV['KALTURA_ROOT_CATEGORY_PATH']
     filter.full_name_equal = full_cat_path + ">" +cat_name
     pager = KalturaFilterPager.new()
     results = client.category_service.list(filter, pager)
@@ -193,8 +201,8 @@ class Vconn1 < Test::Unit::TestCase
     entry = KalturaMediaEntry.new()
     entry.media_type = KalturaMediaType::VIDEO
     entry.name = entry_name
-    entry.description = "AC original ID: " + ENV['MEETING_ID']
-    entry.tags = ENV['MEETING_ID']
+    entry.description = "AC original ID: " + meeting_id
+    entry.tags = meeting_id
     entry.categories=full_cat_path + ">" +cat_name
 
     results = client.media_service.add(entry)
