@@ -59,6 +59,19 @@ class Vconn1 < Test::Unit::TestCase
   def test_vconn1
 
     # read mandatory ENV params
+    # I love Ruby but I find instance_variable_set() and instance_variable_get() messy and not worth it...
+    # this is actually one of these mighty rare occasions where PHP outshines ruby in terms of cleanliness of syntax with the `$$` or variable variable. 
+    # so, verify existence first and set later.. less "cool" but you can't have it all:)
+    
+    mandatory_env_vars = ['OUTDIR', 'MEETING_ID', 'MEETING_NAME', 'CATEGORY_NAME', 'AC_USERNAME', 'AC_PASSWD'] 
+    
+    mandatory_env_vars.each do |mandatory_var|
+      if ! ENV[mandatory_var] or ENV[mandatory_var].empty?
+	@logger.error('Missing ENV var ' + mandatory_var + ':( Make sure you export it.')
+	return false
+      end
+    end
+
     out_dir=ENV['OUTDIR'] + '/'
     meeting_id=ENV['MEETING_ID']
     entry_name=ENV['MEETING_NAME']
