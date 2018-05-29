@@ -15,7 +15,6 @@ This code generates MKV files out of AC recordings and ingests them onto Kaltura
 - unzip
 - xvfb
 - pidof [provided by the `sysvinit-utils` package in Debian/Ubuntu and by `sysvinit-tools` in RHEL/CentOS/FC]
-- dos2unix
 - Firefox with the Flash plugin loaded [tested with 60.0.1 but other recent versions should work as well]
 - Ruby [2.3 and 2.5 were tested]
 - Ruby Gems: `adobe_connect`, `selenium-webdriver`, `open3`, `kaltura-client`, `test-unit`, `shellwords`, `logger`
