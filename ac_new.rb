@@ -97,6 +97,14 @@ class Vconn1 < Test::Unit::TestCase
     audio_file=out_dir + meeting_id + '.mp3'
     recording_file=out_dir + meeting_id + '.mkv'
     full_recording_file=out_dir + meeting_id + '.full.mkv'
+	
+    basedir=File.dirname(__FILE__) 
+    @logger.info(basedir + '/get_ac_audio.sh ' + meeting_id)
+    system basedir + '/get_ac_audio.sh ' + meeting_id 
+    if $?.exitstatus != 0 or ! File.exist?(audio_file)
+	    @logger.error("Failed to obtain audio file :(")
+	    return false
+    end
 
     # get duration from the MP3 file, we'll use that to determine how long ffmpeg should be recording for 
     dur_sec, stdeerr, status = Open3.capture3(ffprobe_bin + " -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " + audio_file.shellescape)
@@ -171,7 +179,9 @@ class Vconn1 < Test::Unit::TestCase
   end
 
   def ffmpeg_detect_scene_start_time(ffmpeg_bin,recording_file,scene_number)
-    first_scene, stdeerr, status = Open3.capture3(ffmpeg_bin + " -i " + recording_file.shellescape + " -filter:v \"select='gt(scene,0.4)',showinfo\"  -frames:v " + scene_number.to_s + " -f null  - 2>&1|grep pts_time|sed 's/.*pts_time:\\([0-9.]*\\).*/\\1/'")
+    ffmpeg_scene_command=ffmpeg_bin + " -i " + recording_file.shellescape + " -filter:v \"select='gt(scene,0.4)',showinfo\"  -frames:v " + scene_number.to_s + " -f null  - 2>&1|grep pts_time|sed 's/.*pts_time:\\([0-9.]*\\).*/\\1/'"
+    @logger.info('scene COMMAND IS: ' + ffmpeg_scene_command)
+    first_scene, stdeerr, status = Open3.capture3(ffmpeg_scene_command)
     # because of our sed here, status.success? will always be true so need to insepct the value further.
     if !first_scene.empty?
       first_scene=first_scene.delete!("\n").to_f
@@ -185,7 +195,6 @@ class Vconn1 < Test::Unit::TestCase
 
   def ffmpeg_trim_video(ffmpeg_bin, recording_file, start_time, duration, output_file)
     ffmpeg_trim_command=ffmpeg_bin + " -i " + recording_file.shellescape + " -ss " + start_time.to_s + " -t " + duration.to_s + " -c copy -strict -2 -an -y " + output_file.shellescape	
-
     @logger.info("Trim COMMAND IS: " + ffmpeg_trim_command)
     system ffmpeg_trim_command 
     if $?.exitstatus != 0
