@@ -77,7 +77,7 @@ class Vconn1 < Test::Unit::TestCase
     meeting_id=ENV['MEETING_ID'].strip
     entry_name=ENV['MEETING_NAME']
     cat_name=ENV['CATEGORY_NAME']
-    ac_user=ENV['AC_USERNAME']
+    ac_username=ENV['AC_USERNAME']
     ac_passwd=ENV['AC_PASSWD']
     x_display=ENV['X_SERVER_DISPLAY_NUM']
 
