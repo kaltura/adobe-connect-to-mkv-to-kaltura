@@ -4,7 +4,7 @@ if [ $# -lt 1 ];then
         exit 1
 fi
 
-for UTIL in pidof xvfb-run xvfb-run-safe curl unzip ;do
+for UTIL in pidof xvfb-run xvfb-run-safe curl unzip dos2unix;do
         if [ ! -x "`which $UTIL 2>/dev/null`" ];then
                 echo "Need to install $UTIL."
                 exit 2
@@ -16,22 +16,20 @@ ASSET_LIST_FILE=$1
 if [ -z "$MAX_CONCUR_PROCS" ];then
     MAX_CONCUR_PROCS=7
 fi
-
 if [ -x "`which dos2unix 2>/dev/null`" ];then
     dos2unix $ASSET_LIST_FILE
 fi
 while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME MEETING_ID;do
 	set -o nounset
-	CATEGORY_NAME=`echo $CATEGORY_NAME|sed 's^"^^g'`
-	MEETING_NAME=`echo $MEETING_NAME|sed 's^"^^g'`
-	echo "CATEGORY_NAME='$CATEGORY_NAME' MEETING_NAME='$MEETING_NAME' MEETING_ID='$MEETING_ID'"
-        export CATEGORY_NAME MEETING_NAME MEETING_ID
         CUR_XVFB=`pidof Xvfb |wc -w`
         while [ ! $CUR_XVFB -lt $MAX_CONCUR_PROCS ];do
                 echo "Have $CUR_XVFB running so I'll take a short nap..."
                 sleep 60
                 CUR_XVFB=`pidof Xvfb |wc -w`
         done
+        CATEGORY_NAME=`echo $CATEGORY_NAME|sed 's^"^^g'`
+        MEETING_NAME=`echo $MEETING_NAME|sed 's^"^^g'`
+        export CATEGORY_NAME MEETING_NAME MEETING_ID
         nohup sh -c "xvfb-run-safe -s \"-auth /tmp/xvfb.auth -ac -screen 0 1280x720x24\" $BASEDIR/ac_new.rb " > /tmp/ac_$MEETING_ID.log 2>&1 &
 	sleep 2
 done < $ASSET_LIST_FILE 
