@@ -84,3 +84,24 @@ Where `$RECORDING_ID` is the relative path for the given recording; i.e: `//sco/
 
 If the `KALTURA_.*` ENV vars are set, `$OUTDIR/$RECORDING_ID.full.mkv` will then be uploaded to Kaltura.
 Full logs are written to `/tmp/ac_$RECORDING_ID.log`. If there's a problem, start by looking there.
+
+
+# Contributing
+* Use the repository issue tracker to report bugs or submit feature requests
+* Read [Contributing Code to the Kaltura Platform](https://github.com/kaltura/platform-install-packages/blob/master/doc/Contributing-to-the-Kaltura-Platform.md)
+* Pull requests are very welcome:) Please be sure to sign [Kaltura Contributor License Agreement](https://agentcontribs.kaltura.org/) when submitting them.
+
+# Where to get help
+* Join the [Kaltura Community Forums](https://forum.kaltura.org/) to ask questions or start discussions
+* Read the [Code of conduct](https://forum.kaltura.org/faq) and be patient and respectful
+
+# Get in touch
+You can learn more about Kaltura and start a free trial at: http://corp.kaltura.com    
+Contact us via Twitter [@Kaltura](https://twitter.com/Kaltura) or email: community@kaltura.com  
+We'd love to hear from you!
+
+# License and Copyright Information
+All code in this project is released under the [AGPLv3 license](http://www.gnu.org/licenses/agpl-3.0.html) unless a different license for a particular library is specified in the applicable library path.   
+
+Copyright © Kaltura Inc. All rights reserved.   
+Authors and contributors: See [GitHub contributors list](/graphs/contributors).  
