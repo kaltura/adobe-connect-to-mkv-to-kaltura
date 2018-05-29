@@ -4,7 +4,7 @@ if [ $# -lt 1 ];then
         exit 1
 fi
 
-for UTIL in pidof xvfb-run xvfb-run-safe curl unzip dos2unix;do
+for UTIL in pidof xvfb-run xvfb-run-safe curl unzip ;do
         if [ ! -x "`which $UTIL 2>/dev/null`" ];then
                 echo "Need to install $UTIL."
                 exit 2
@@ -16,11 +16,14 @@ ASSET_LIST_FILE=$1
 if [ -z "$MAX_CONCUR_PROCS" ];then
     MAX_CONCUR_PROCS=7
 fi
-dos2unix $ASSET_LIST_FILE
+
+if [ -x "`which dos2unix 2>/dev/null`" ];then
+    dos2unix $ASSET_LIST_FILE
+fi
 while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME MEETING_ID;do
 	set -o nounset
-        CATEGORY_NAME=`echo $CATEGORY_NAME|sed 's@"@@g'`
-        MEETING_NAME=`echo $MEETING_NAME|sed 's@"@@g'`
+	CATEGORY_NAME=`echo $CATEGORY_NAME|sed 's^"^^g'`
+	MEETING_NAME=`echo $MEETING_NAME|sed 's^"^^g'`
 	echo "CATEGORY_NAME='$CATEGORY_NAME' MEETING_NAME='$MEETING_NAME' MEETING_ID='$MEETING_ID'"
         export CATEGORY_NAME MEETING_NAME MEETING_ID
         CUR_XVFB=`pidof Xvfb |wc -w`
