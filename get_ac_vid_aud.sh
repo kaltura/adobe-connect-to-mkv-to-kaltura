@@ -20,27 +20,24 @@ fi
 
 unzip -o -d $TMP $ID.zip
 
-VOIP=($(ls $TMP/cameraVoip*.flv | sort --version-sort -f))
-if [ -z "$VOIP" ];then
-        VOIP=($(ls $TMP/ftvoice*_*.flv | sort --version-sort -f))
-fi
-if [ -z "$VOIP" ];then
-        echo "$ID.zip does contains neither cameraVoip*.flv nor ftvoice*.flv files. Exiting:("
-        exit 2
-fi
+
+VOIP=($(ls $TMP/cameraVoip*.flv | sort --version-sort -f)) 
+SCREENSHARE=($(ls $TMP/screenshare*.flv | sort --version-sort -f)) 
 
 for i in "${!VOIP[@]}"; do
     FILENAME=$(printf "%0*d" 4 $i)
-    ffmpeg -i "${VOIP[$i]}" -y $ID/$FILENAME.mp3
+    if [ -n "$SCREENSHARE" ];then
+        ffmpeg -i "${VOIP[$i]}" -i "${SCREENSHARE[$i]}" -vcodec copy -acodec copy -y $ID/$FILENAME.flv
+    else 
+        ffmpeg -i "${VOIP[$i]}"  -vcodec copy -acodec copy -y $ID/$FILENAME.flv
+    fi   
 done
 rm -f $ID.list
-for f in $ID/*.mp3; do echo "file '$PWD/$f'" >>$ID.list; done
-
-OUTPUT_FILE="$OUTDIR/$ID.mp3"
+for f in $ID/*.flv; do echo "file '$PWD/$f'" >>$ID.list; done 
+OUTPUT_FILE=$OUTDIR/$ID.flv
 ffmpeg -f concat -safe 0 -i $ID.list -c copy -y $OUTPUT_FILE
-if [ ! -r $OUTPUT_FILE ];then
-	echo "Failed to generate $OUTPUT_FILE."
-	exit 3
-fi
 echo "Final output saved to $OUTPUT_FILE"
+
+
+
 
