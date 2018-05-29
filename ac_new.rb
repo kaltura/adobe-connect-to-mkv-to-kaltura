@@ -63,7 +63,7 @@ class Vconn1 < Test::Unit::TestCase
     # this is actually one of these mighty rare occasions where PHP outshines ruby in terms of cleanliness of syntax with the `$$` or variable variable. 
     # so, verify existence first and set later.. less "cool" but you can't have it all:)
     
-    mandatory_env_vars = ['OUTDIR', 'MEETING_ID', 'MEETING_NAME', 'CATEGORY_NAME', 'AC_USERNAME', 'AC_PASSWD'] 
+    mandatory_env_vars = ['OUTDIR', 'MEETING_ID', 'MEETING_NAME', 'CATEGORY_NAME', 'AC_USERNAME', 'AC_PASSWD', 'X_SERVER_DISPLAY_NUM'] 
     
     mandatory_env_vars.each do |mandatory_var|
       if ! ENV[mandatory_var] or ENV[mandatory_var].empty?
@@ -78,6 +78,7 @@ class Vconn1 < Test::Unit::TestCase
     cat_name=ENV['CATEGORY_NAME']
     ac_user=ENV['AC_USERNAME']
     ac_passwd=ENV['AC_PASSWD']
+    x_display=ENV['X_SERVER_DISPLAY_NUM']
 
     if ENV['FFMPEG_BIN']
 	    ffmpeg_bin=ENV['FFMPEG_BIN']
@@ -91,17 +92,20 @@ class Vconn1 < Test::Unit::TestCase
 	    ffprobe_bin='ffprobe'
     end
     
-    recording_file=out_dir + meeting_id + '.mkv'
+    resolution='1280x720'
+    frame_rate='30'
     audio_file=out_dir + meeting_id + '.mp3'
+    recording_file=out_dir + meeting_id + '.mkv'
     full_recording_file=out_dir + meeting_id + '.full.mkv'
 
     # get duration from the MP3 file, we'll use that to determine how long ffmpeg should be recording for 
-    duration, stdeerr, status = Open3.capture3(ffprobe_bin + " -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " + audio_file.shellescape)
+    dur_sec, stdeerr, status = Open3.capture3(ffprobe_bin + " -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " + audio_file.shellescape)
+    dur_sec=dur_sec.delete!("\n")
     if ! status.success?
       log.error('Failed to get audio track duration. Exited with ' + $?.exitstatus.to_s + ':(')
       return false
     end
-    dur_sec=duration.split(':').map { |a| a.to_i }.inject(0) { |a, b| a * 60 + b}
+    #dur_sec=duration.split(':').map { |a| a.to_i }.inject(0) { |a, b| a * 60 + b}
     # since AC takes forever to load the recording, add 2 minutes to the actual recording's duration, we'll cut the extra off later
     extra_duration=dur_sec.to_f + 120
 
@@ -113,43 +117,26 @@ class Vconn1 < Test::Unit::TestCase
     end
     @driver.get(@base_url + "/" + meeting_id +"?launcher=false&fcsContent=true&pbMode=normal")
 
-    # FFmpeg magic
 
+
+    # FFmpeg magic
     # record X11's display 
-    ffmpeg_x11grab_command=ffmpeg_bin + ' -s 1280x720 -framerate 30 -f x11grab -i :' + ENV['X_SERVER_DISPLAY_NUM'] + ' -t ' + extra_duration.to_s + ' -vf "crop=in_w:in_h-147" -y ' + recording_file.shellescape
-    @logger.info('X11grab COMMAND IS: ' + ffmpeg_x11grab_command)
-    
-    system ffmpeg_x11grab_command
-    if $?.exitstatus != 0
-      @logger.error('ffmpeg x11grab command exited with ' + $?.exitstatus.to_s + ':(')
+    if ! ffmpeg_x11_grab(ffmpeg_bin,resolution, frame_rate, x_display, extra_duration.to_s, recording_file)
       return false
     end
     
     # use scene detector feature to determine when the recording had actually started
-    first_scene, stdeerr, status = Open3.capture3(ffmpeg_bin + " -i " + recording_file +" -filter:v \"select='gt(scene,0.4)',showinfo\"  -frames:v 1  -f null  - 2>&1|grep pts_time|sed 's/.*pts_time:\\([0-9.]*\\).*/\\1/'")
-    if $?.exitstatus != 0
-      @logger.error('ffmpeg scene detection command exited with ' + $?.exitstatus.to_s + ':(')
+    if ! first_scene=ffmpeg_detect_scene_start_time(ffmpeg_bin, recording_file, 1)
       return false
     end
-    first_scene=first_scene.delete!("\n")
 
     # trim original screen recording so that it starts from when AC actually started playing the recording
-    ffmpeg_trim_command=ffmpeg_bin + " -i " + recording_file + " -ss " + first_scene + " -t " + dur_sec.to_s + " -c copy -strict -2 -an -y " + out_dir +meeting_id+".final.mkv"	
-
-    @logger.info("Trim COMMAND IS: " + ffmpeg_trim_command)
-    system ffmpeg_trim_command 
-    if $?.exitstatus != 0
-      @logger.error('ffmpeg trim command exited with ' + $?.exitstatus.to_s + ':(')
+    if ! ffmpeg_trim_video(ffmpeg_bin, recording_file, first_scene, dur_sec.to_s, out_dir + meeting_id + ".final.mkv")
       return false
     end
 
     # merge video and audio files
-    ffmpeg_merge_command=ffmpeg_bin + " -i " + out_dir +meeting_id+ ".final.mkv -i " + audio_file + " -c copy -y " + full_recording_file.shellescape
-
-    @logger.info("Merge COMMAND IS: " + ffmpeg_merge_command)
-    system ffmpeg_merge_command 
-    if $?.exitstatus != 0
-      @logger.error('ffmpeg audio and video merge command exited with ' + $?.exitstatus.to_s + ':(')
+    if ! ffmpeg_merge_vid_and_aud_tracks(ffmpeg_bin, out_dir + meeting_id + ".final.mkv", audio_file, full_recording_file)
       return false
     end
 
@@ -173,6 +160,55 @@ class Vconn1 < Test::Unit::TestCase
     ingest_to_kaltura(ENV['KALTURA_BASE_ENDPOINT'],ENV['KALTURA_PARTNER_ID'], ENV['KALTURA_PARTNER_SECRET'], ENV['KALTURA_CAT_ID'], ENV['KALTURA_ROOT_CATEGORY_PATH'], cat_name, entry_name, meeting_id, full_recording_file)
   end
 
+  def ffmpeg_x11_grab(ffmpeg_bin,resolution, frame_rate, x_display, duration, recording_file)
+
+    ffmpeg_x11grab_command=ffmpeg_bin + ' -s ' + resolution + ' -framerate ' + frame_rate.to_s + ' -f x11grab -i :' + x_display.to_s + ' -t ' + duration.to_s + ' -vf "crop=in_w:in_h-147" -y ' + recording_file.shellescape
+    @logger.info('X11grab COMMAND IS: ' + ffmpeg_x11grab_command)
+    
+    system ffmpeg_x11grab_command
+    if $?.exitstatus != 0
+      @logger.error('ffmpeg x11grab command exited with ' + $?.exitstatus.to_s + ':(')
+      return false
+    end
+    return true
+  end
+
+  def ffmpeg_detect_scene_start_time(ffmpeg_bin,recording_file,scene_number)
+    first_scene, stdeerr, status = Open3.capture3(ffmpeg_bin + " -i " + recording_file.shellescape + " -filter:v \"select='gt(scene,0.4)',showinfo\"  -frames:v " + scene_number.to_s + " -f null  - 2>&1|grep pts_time|sed 's/.*pts_time:\\([0-9.]*\\).*/\\1/'")
+    # because of our sed here, status.success? will always be true so need to insepct the value further.
+    if !first_scene.empty?
+      first_scene=first_scene.delete!("\n").to_f
+      if !first_scene.is_a? Numeric
+        @logger.error('ffmpeg scene detection command failed :(')
+        return false
+      end
+    end
+    return first_scene
+  end
+
+  def ffmpeg_trim_video(ffmpeg_bin, recording_file, start_time, duration, output_file)
+    ffmpeg_trim_command=ffmpeg_bin + " -i " + recording_file.shellescape + " -ss " + start_time.to_s + " -t " + duration.to_s + " -c copy -strict -2 -an -y " + output_file.shellescape	
+
+    @logger.info("Trim COMMAND IS: " + ffmpeg_trim_command)
+    system ffmpeg_trim_command 
+    if $?.exitstatus != 0
+      @logger.error('ffmpeg trim command exited with ' + $?.exitstatus.to_s + ':(')
+      return false
+    end
+    return true
+  end
+
+  def ffmpeg_merge_vid_and_aud_tracks(ffmpeg_bin, vid_file, aud_file, output_file)
+    ffmpeg_merge_command=ffmpeg_bin + " -i " + vid_file.shellescape + " -i " + aud_file.shellescape + " -c copy -y " + output_file.shellescape
+
+    @logger.info("Merge COMMAND IS: " + ffmpeg_merge_command)
+    system ffmpeg_merge_command 
+    if $?.exitstatus != 0
+      @logger.error('ffmpeg audio and video merge command exited with ' + $?.exitstatus.to_s + ':(')
+      return false
+    end
+    return true
+  end
 
   def ingest_to_kaltura(base_endpoint,partner_id, secret, parent_cat_id, full_cat_path, cat_name, entry_name, meeting_id, vid_file_path)
     config = KalturaConfiguration.new()
