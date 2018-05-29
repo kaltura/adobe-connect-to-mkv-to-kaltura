@@ -105,7 +105,6 @@ class Vconn1 < Test::Unit::TestCase
       log.error('Failed to get audio track duration. Exited with ' + $?.exitstatus.to_s + ':(')
       return false
     end
-    #dur_sec=duration.split(':').map { |a| a.to_i }.inject(0) { |a, b| a * 60 + b}
     # since AC takes forever to load the recording, add 2 minutes to the actual recording's duration, we'll cut the extra off later
     extra_duration=dur_sec.to_f + 120
 
@@ -116,8 +115,6 @@ class Vconn1 < Test::Unit::TestCase
       @driver.find_element(:id, "login-button").click
     end
     @driver.get(@base_url + "/" + meeting_id +"?launcher=false&fcsContent=true&pbMode=normal")
-
-
 
     # FFmpeg magic
     # record X11's display 
