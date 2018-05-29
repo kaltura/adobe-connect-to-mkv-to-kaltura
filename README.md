@@ -38,6 +38,9 @@ FFMPEG_BIN=/path/to/ffmpeg
 FFPROBE_BIN=/path/to/ffprobe
 ```
 
+**IMPORTANT NOTE: these vars need to be available GLOBALLY. Setting them in your interactive shell and running `ac_wrapper.sh` will not work. Start a new interactive session and make sure they are set BEFORE running the wrapper.**
+
+
 ### The `AC_LOGIN_REQUIRED` ENV var
 If your AC instance does not require the user to login in order to play the recording, you can set the value of `AC_LOGIN_REQUIRED` to false to skip that step.
 The code in `ac_new.rb` assumes that the user and passwd text field IDs are `name` and `pwd` respectively and that the submit button ID is `login-button`.
