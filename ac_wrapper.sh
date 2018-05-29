@@ -16,19 +16,19 @@ ASSET_LIST_FILE=$1
 if [ -z "$MAX_CONCUR_PROCS" ];then
     MAX_CONCUR_PROCS=7
 fi
-while read LINE ;do
+while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME MEETING_ID;do
+	set -o nounset
+        CATEGORY_NAME=`echo $CATEGORY_NAME|sed 's@"@@g'`
+        MEETING_NAME=`echo $MEETING_NAME|sed 's@"@@g'`
+	echo "CATEGORY_NAME='$CATEGORY_NAME' MEETING_NAME='$MEETING_NAME' MEETING_ID='$MEETING_ID'"
+        export CATEGORY_NAME MEETING_NAME MEETING_ID
         CUR_XVFB=`pidof Xvfb |wc -w`
         while [ ! $CUR_XVFB -lt $MAX_CONCUR_PROCS ];do
-                echo "Have $CUR_XVFB running so I'll sleep a bit..."
+                echo "Have $CUR_XVFB running so I'll take a short nap..."
                 sleep 60
                 CUR_XVFB=`pidof Xvfb |wc -w`
         done
-        CATEGORY_NAME=`echo $LINE|awk -F "," '{print $2}'|sed 's@"@@g'`
-        MEETING_NAME=`echo $LINE|awk -F "," '{print $3}'|sed 's@"@@g'`
-        MEETING_ID=`echo $LINE|awk -F "," '{print $4}'|sed 's@/@@g'`
-        MEETING_DURATION=`echo $LINE|awk -F "," '{print $5}'`
-        export CATEGORY_NAME MEETING_NAME MEETING_ID MEETING_DURATION
-        xvfb-run-safe -s "-auth /tmp/xvfb.auth -ac -screen 0 1280x720x24" $BASEDIR/ac_new.rb > /tmp/ac_$MEETING_ID.log 2>&1 &
-	sleep 2
-done < $ASSET_LIST_FILE
+        nohup sh -c "xvfb-run-safe -s \"-auth /tmp/xvfb.auth -ac -screen 0 1280x720x24\" $BASEDIR/ac_new.rb " > /tmp/ac_$MEETING_ID.log 2>&1 &
+		sleep 2
+done < $ASSET_LIST_FILE 
 
