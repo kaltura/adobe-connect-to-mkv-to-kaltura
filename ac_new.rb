@@ -73,7 +73,8 @@ class Vconn1 < Test::Unit::TestCase
     end
 
     out_dir=ENV['OUTDIR'] + '/'
-    meeting_id=ENV['MEETING_ID']
+    # let's strip spaces just to be on the safe side
+    meeting_id=ENV['MEETING_ID'].strip
     entry_name=ENV['MEETING_NAME']
     cat_name=ENV['CATEGORY_NAME']
     ac_user=ENV['AC_USERNAME']
