@@ -30,6 +30,6 @@ while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME MEETING_ID;do
                 CUR_XVFB=`pidof Xvfb |wc -w`
         done
         nohup sh -c "xvfb-run-safe -s \"-auth /tmp/xvfb.auth -ac -screen 0 1280x720x24\" $BASEDIR/ac_new.rb " > /tmp/ac_$MEETING_ID.log 2>&1 &
-		sleep 2
+	sleep 2
 done < $ASSET_LIST_FILE 
 
