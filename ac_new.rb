@@ -185,13 +185,14 @@ class Vconn1 < Test::Unit::TestCase
     first_scene, stdeerr, status = Open3.capture3(ffmpeg_scene_command)
     # because of our sed here, status.success? will always be true so need to insepct the value further.
     if first_scene.empty?
+      @logger.error('ffmpeg scene detection command failed to detect first scene time :(')
       return false
     end
     first_scene=first_scene.delete!("\n")
     first_scene=first_scene.to_f
     if !first_scene.is_a? Numeric
-    	@logger.error('ffmpeg scene detection command exited with ' + $?.exitstatus.to_s + ':(')
-        return false
+      @logger.error('ffmpeg scene detection command came back with unexpected output: ' + first_scene + ' :(')
+      return false
     end
     return first_scene
   end
