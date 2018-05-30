@@ -28,16 +28,16 @@ for i in "${!VOIP[@]}"; do
 	if ffprobe -v error -show_entries stream=codec_type ${VOIP[$i]}|grep -m1 -q "video\|audio" ;then
 			FILENAME=$(printf "%0*d" 4 $i)
 			if [ -n "${SCREENSHARE[$i]}" ];then
-				ffmpeg -i "${VOIP[$i]}" -i "${SCREENSHARE[$i]}" -vcodec copy -acodec copy -y $ID/$FILENAME.flv
+				ffmpeg -nostdin -i "${VOIP[$i]}" -i "${SCREENSHARE[$i]}" -vcodec copy -acodec copy -y $ID/$FILENAME.flv
 			else 
-				ffmpeg -i "${VOIP[$i]}"  -vcodec copy -acodec copy -y $ID/$FILENAME.flv
+				ffmpeg -nostdin -i "${VOIP[$i]}"  -vcodec copy -acodec copy -y $ID/$FILENAME.flv
 			fi   
 	fi
 done
 rm -f $ID.list
 for f in $ID/*.flv; do echo "file '$PWD/$f'" >>$ID.list; done 
 OUTPUT_FILE=$OUTDIR/$ID.flv
-ffmpeg -f concat -safe 0 -i $ID.list -c copy -y $OUTPUT_FILE
+ffmpeg -nostdin -f concat -safe 0 -i $ID.list -c copy -y $OUTPUT_FILE
 echo "Final output saved to $OUTPUT_FILE"
 
 
