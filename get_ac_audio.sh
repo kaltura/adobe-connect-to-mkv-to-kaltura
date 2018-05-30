@@ -20,18 +20,24 @@ fi
 
 unzip -o -d $TMP $ID.zip
 
-VOIP=($(ls $TMP/cameraVoip*.flv | sort --version-sort -f))
-if [ -z "$VOIP" ];then
-        VOIP=($(ls $TMP/ftvoice*_*.flv | sort --version-sort -f))
+if ls $TMP/cameraVoip*.flv >/dev/null 2>&1;then
+	VOIP=($(ls $TMP/cameraVoip*.flv | sort --version-sort -f))
+elif ls $TMP/ftvoice*.flv >/dev/null 2>&1;then
+        VOIP=($(ls $TMP/ftvoice*.flv | sort --version-sort -f))
+elif ls $TMP/ftstage*.flv >/dev/null 2>&1;then
+        VOIP=($(ls $TMP/ftstage*.flv | sort --version-sort -f))
 fi
+
 if [ -z "$VOIP" ];then
         echo "$ID.zip does contains neither cameraVoip*.flv nor ftvoice*.flv files. Exiting:("
         exit 2
 fi
 
 for i in "${!VOIP[@]}"; do
-    FILENAME=$(printf "%0*d" 4 $i)
-    ffmpeg -i "${VOIP[$i]}" -y $ID/$FILENAME.mp3
+	if ffprobe -v error -show_entries stream=codec_type ${VOIP[$i]} |grep -m1 -q audio;then
+    	FILENAME=$(printf "%0*d" 4 $i)
+    	ffmpeg -i "${VOIP[$i]}" -y $ID/$FILENAME.mp3
+	fi
 done
 rm -f $ID.list
 for f in $ID/*.mp3; do echo "file '$PWD/$f'" >>$ID.list; done
