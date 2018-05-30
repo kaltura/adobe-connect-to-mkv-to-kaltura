@@ -26,7 +26,7 @@ SCREENSHARE=($(ls $TMP/screenshare*.flv | sort --version-sort -f))
 
 for i in "${!VOIP[@]}"; do
     FILENAME=$(printf "%0*d" 4 $i)
-    if [ -n "$SCREENSHARE" ];then
+    if [ -n "${SCREENSHARE[$i]}" ];then
         ffmpeg -i "${VOIP[$i]}" -i "${SCREENSHARE[$i]}" -vcodec copy -acodec copy -y $ID/$FILENAME.flv
     else 
         ffmpeg -i "${VOIP[$i]}"  -vcodec copy -acodec copy -y $ID/$FILENAME.flv
