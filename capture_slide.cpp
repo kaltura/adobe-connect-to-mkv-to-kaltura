@@ -24,7 +24,7 @@ int thresh = 50, N = 11;
 // helper function:
 // finds a cosine of angle between vectors
 // from pt0->pt1 and from pt0->pt2
-static double angle( Point pt1, Point pt2, Point pt0 )
+static double angle(Point pt1, Point pt2, Point pt0)
 {
     double dx1 = pt1.x - pt0.x;
     double dy1 = pt1.y - pt0.y;
@@ -35,7 +35,7 @@ static double angle( Point pt1, Point pt2, Point pt0 )
 
 // returns sequence of squares detected on the image.
 // the sequence is stored in the specified memory storage
-static void findSquares( const Mat& image, vector<vector<Point> >& squares )
+static void findSquares(const Mat& image, vector<vector<Point> >& squares)
 {
     squares.clear();
 
@@ -47,27 +47,22 @@ static void findSquares( const Mat& image, vector<vector<Point> >& squares )
     vector<vector<Point> > contours;
 
     // find squares in every color plane of the image
-    for( int c = 0; c < 3; c++ )
-    {
+    for(int c = 0; c < 3; c++){
         int ch[] = {c, 0};
         mixChannels(&timg, 1, &gray0, 1, ch, 1);
 
         // try several threshold levels
-        for( int l = 0; l < N; l++ )
-        {
+        for(int l = 0; l < N; l++){
             // hack: use Canny instead of zero threshold level.
             // Canny helps to catch squares with gradient shading
-            if( l == 0 )
-            {
+            if(l == 0){
                 // apply Canny. Take the upper threshold from slider
                 // and set the lower to 0 (which forces edges merging)
                 Canny(gray0, gray, 0, thresh, 5);
                 // dilate canny output to remove potential
                 // holes between edge segments
                 dilate(gray, gray, Mat(), Point(-1,-1));
-            }
-            else
-            {
+            }else{
                 // apply threshold if l!=0:
                 //     tgray(x,y) = gray(x,y) < (l+1)*255/N ? 255 : 0
                 gray = gray0 >= (l+1)*255/N;
@@ -79,8 +74,7 @@ static void findSquares( const Mat& image, vector<vector<Point> >& squares )
             vector<Point> approx;
 
             // test each contour
-            for( size_t i = 0; i < contours.size(); i++ )
-            {
+            for(size_t i = 0; i < contours.size(); i++){
                 // approximate contour with accuracy proportional
                 // to the contour perimeter
                 approxPolyDP(Mat(contours[i]), approx, arcLength(Mat(contours[i]), true)*0.02, true);
@@ -91,14 +85,12 @@ static void findSquares( const Mat& image, vector<vector<Point> >& squares )
                 // Note: absolute value of an area is used because
                 // area may be positive or negative - in accordance with the
                 // contour orientation
-                if( approx.size() == 4 &&
+                if(approx.size() == 4 &&
                     fabs(contourArea(Mat(approx))) > 1000 &&
-                    isContourConvex(Mat(approx)) )
-                {
+                    isContourConvex(Mat(approx))){
                     double maxCosine = 0;
 
-                    for( int j = 2; j < 5; j++ )
-                    {
+                    for(int j = 2; j < 5; j++){
                         // find the maximum cosine of the angle between joint edges
                         double cosine = fabs(angle(approx[j%4], approx[j-2], approx[j-1]));
                         maxCosine = MAX(maxCosine, cosine);
@@ -107,7 +99,7 @@ static void findSquares( const Mat& image, vector<vector<Point> >& squares )
                     // if cosines of all angles are small
                     // (all angles are ~90 degree) then write quandrange
                     // vertices to resultant sequence
-                    if( maxCosine < 0.3 ){
+                    if(maxCosine < 0.3){
                         squares.push_back(approx);
 		    }
                 }
@@ -118,17 +110,17 @@ static void findSquares( const Mat& image, vector<vector<Point> >& squares )
 
 
 // the function finds the third biggest rect area in the image [the slide POD] and generates a new image out of it
-static void createSlide(Mat& image, const char *slide_output_path,const vector<vector<Point> >& squares )
+static void createSlide(Mat& image, const char *slide_output_path,const vector<vector<Point> >& squares)
 {
     vector<int> sortIdx(squares.size());
     vector<float> areas(squares.size());
-    for( int n = 0; n < (int)squares.size(); n++ ) {
+    for(int n = 0; n < (int)squares.size(); n++) {
 	sortIdx[n] = n;
 	areas[n] = contourArea(squares[n], false);
     }
 
     // sort contours so that the largest contours go first
-    std::sort( sortIdx.begin(), sortIdx.end(), AreaCmp(areas ));
+    std::sort(sortIdx.begin(), sortIdx.end(), AreaCmp(areas));
     Rect r = boundingRect(squares[sortIdx[3]]);
     Mat ROI(image, r);
     Mat croppedImage;
@@ -144,7 +136,7 @@ static void createSlide(Mat& image, const char *slide_output_path,const vector<v
 int main(int argc, char** argv)
 {
 
-    if (argc < 3 ){
+    if (argc < 3){
 	cout<<"Usage: "<<argv[0]<<" </path/to/orig/image> </path/to/output/slide/img>\n";
 	return 1;
     }
@@ -153,15 +145,13 @@ int main(int argc, char** argv)
     vector<vector<Point> > squares;
 
     Mat image = imread(orig_img, 1);
-    if( image.empty() )
-    {
+    if(image.empty()){
 	cout << "Couldn't load " << orig_img << endl;
 	return 2;
     }
 
     findSquares(image, squares);
     createSlide(image, slide_output_path, squares);
-
 
     return 0;
 }
