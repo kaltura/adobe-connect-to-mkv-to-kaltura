@@ -49,8 +49,6 @@ def ingest_to_kaltura(client,base_endpoint,partner_id, secret, parent_cat_id, fu
   resume_at = -1
 
   results = client.upload_token_service.upload(upload_token_id, file_data, resume, final_chunk, resume_at)
-  #entry = KalturaMediaEntry.new()
-  #entry.media_type = KalturaMediaType::VIDEO
   entry = KalturaBaseEntry.new()
   entry.name = entry_name
   type = KalturaEntryType::AUTOMATIC
@@ -58,7 +56,6 @@ def ingest_to_kaltura(client,base_endpoint,partner_id, secret, parent_cat_id, fu
   entry.tags = meeting_id
   entry.categories=full_cat_path + ">" +cat_name
 
-  #results = client.media_service.add(entry)
   results = client.base_entry_service.add(entry,type)
 
   entry_id = results.id
@@ -113,7 +110,6 @@ def ingest_slides_to_kaltura(client, entry_id, slides_metatdata_array, images_pa
     puts results.inspect
     
   end
-  #end
 end
 
 if ARGV.length < 4
@@ -122,12 +118,12 @@ if ARGV.length < 4
 end
 
 
-base_endpoint='https://www.kaltura.com'
-partner_id=2053461
-secret="4077d41b1213063238f44162866ed809"
-parent_cat_id=91110522
-full_cat_path="Mediaspace>site>galleries>PSU>Adobe Connect"
-cat_name="slide_test"
+base_endpoint=
+partner_id=
+secret=
+parent_cat_id=
+full_cat_path=
+cat_name=
 
 meeting_id=ARGV[0]
 vid_file_path=ARGV[1]
