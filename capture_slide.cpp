@@ -1,4 +1,5 @@
 // g++ capture_slide.cpp -lopencv_core -lopencv_imgproc -lopencv_objdetect -lopencv_highgui -o /tmp/capture_slide
+// g++ capture_slide.cpp -lopencv_core -lopencv_imgproc -lopencv_objdetect -lopencv_highgui -lopencv_imgcodecs 
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
