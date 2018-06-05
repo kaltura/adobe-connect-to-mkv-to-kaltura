@@ -17,4 +17,4 @@ done < $OUTDIR/imgs/scenes3_$MEETING_ID
 for IMG in $OUTDIR/imgs/$MEETING_ID/*jpg;do 
     $BASEDIR/capture_slide $IMG $OUTDIR/slides/$MEETING_ID/`basename $IMG`;
 done
-$BASEDIR/process_cue_points.rb $MEETING_ID $OUTDIR/$MEETING_ID.mp3 /tmp/${MEETING_ID}_srchdata.xml $OUTDIR/slides/$MEETING_ID "$ENTRY_NAME"
+$BASEDIR/kaltura_process_cue_points.rb $MEETING_ID $OUTDIR/$MEETING_ID.mp3 /tmp/${MEETING_ID}_srchdata.xml $OUTDIR/slides/$MEETING_ID "$ENTRY_NAME"
