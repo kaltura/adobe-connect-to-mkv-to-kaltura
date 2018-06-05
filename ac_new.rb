@@ -272,8 +272,10 @@ class Vconn1 < Test::Unit::TestCase
     results = client.media_service.add_content(entry_id, resource)
     if !defined? results.id
       @logger.error("media_service.add_content() failed:(")
+      return false
     end
     @logger.info("Uploaded " + vid_file_path + ", entry ID: " + results.id)
+    return results.id
   end  
 
   def element_present?(how, what)
