@@ -118,12 +118,12 @@ if ARGV.length < 4
 end
 
 
-base_endpoint=
-partner_id=
-secret=
-parent_cat_id=
-full_cat_path=
-cat_name=
+base_endpoint=ENV['KALTURA_BASE_ENDPOINT']
+partner_id=ENV['KALTURA_PARTNER_ID']
+secret=ENV['KALTURA_PARTNER_SECRET']
+parent_cat_id=ENV['KALTURA_CAT_ID']
+full_cat_path=ENV['KALTURA_ROOT_CATEGORY_PATH']
+cat_name="Test Cat"
 
 meeting_id=ARGV[0]
 vid_file_path=ARGV[1]
