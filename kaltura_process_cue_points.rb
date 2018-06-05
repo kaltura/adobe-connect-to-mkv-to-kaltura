@@ -2,14 +2,6 @@
 require 'nokogiri'
 require 'kaltura'
 include Kaltura
-def output_data(connect,sco_id)
-        response = connect.sco_info(sco_id: sco_id)
-        folder_id = response.at_xpath('//sco//@folder-id')
-        fresponse = connect.sco_info(sco_id: folder_id)
-        folder_name = fresponse.at_xpath('//sco//name').text
-        print sco_id +',"'+folder_name.tr(',', '').tr('(','').tr(')','') + '","' + response.at_xpath('//sco//name').text.tr(',', '').tr('(','').tr(')','') + '",' 
-        print response.at_xpath('//sco//url-path').text.tr('/', '') + "\n"
-end
 
 def process_slides(xml)
   slides_array=[]
@@ -112,8 +104,8 @@ def ingest_slides_to_kaltura(client, entry_id, slides_metatdata_array, images_pa
   end
 end
 
-if ARGV.length < 4
-  puts "Usage: " + __FILE__ + "<meeting id> </path/to/vid/file> </path/to/slides/metadata/xml> </path/to/images/dir>"
+if ARGV.length < 5
+  puts "Usage: " + __FILE__ + "<meeting id> </path/to/vid/file> </path/to/slides/metadata/xml> </path/to/images/dir> <entry name>"
   exit 1
 end
 
@@ -148,6 +140,5 @@ client.ks = client.session_service.start(
       "disableentitlement"
 )
 entry_id=ingest_to_kaltura(client,base_endpoint,partner_id, secret, parent_cat_id, full_cat_path, cat_name, entry_name, meeting_id, vid_file_path)
-
 ingest_slides_to_kaltura(client, entry_id, slides_metatdata_array, imgs_dir)
 
