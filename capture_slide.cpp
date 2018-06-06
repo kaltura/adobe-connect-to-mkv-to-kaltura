@@ -110,7 +110,7 @@ static void findSquares(const Mat& image, vector<vector<Point> >& squares)
 
 
 // the function finds the third biggest rect area in the image [the slide POD] and generates a new image out of it
-static void createSlide(Mat& image, const char *slide_output_path,const vector<vector<Point> >& squares)
+static void createSlide(Mat& image, const char *slide_output_path,const vector<vector<Point> >& squares, int rect_elem_index)
 {
     vector<int> sortIdx(squares.size());
     vector<float> areas(squares.size());
@@ -121,7 +121,7 @@ static void createSlide(Mat& image, const char *slide_output_path,const vector<v
 
     // sort contours so that the largest contours go first
     std::sort(sortIdx.begin(), sortIdx.end(), AreaCmp(areas));
-    Rect r = boundingRect(squares[sortIdx[3]]);
+    Rect r = boundingRect(squares[sortIdx[rect_elem_index]]);
     Mat ROI(image, r);
     Mat croppedImage;
 
@@ -142,6 +142,10 @@ int main(int argc, char** argv)
     }
     const char *orig_img=argv[1];
     const char *slide_output_path=argv[2];
+    int rect_elem_index=2;
+    if (argv[3]){
+	rect_elem_index=atoi(argv[3]);
+    }
     vector<vector<Point> > squares;
 
     Mat image = imread(orig_img, 1);
@@ -151,7 +155,7 @@ int main(int argc, char** argv)
     }
 
     findSquares(image, squares);
-    createSlide(image, slide_output_path, squares);
+    createSlide(image, slide_output_path, squares, rect_elem_index);
 
     return 0;
 }
