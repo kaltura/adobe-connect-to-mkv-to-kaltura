@@ -83,7 +83,7 @@ Where `</path/to/asset/list/csv>` is the path to a CSV file in the format descri
 
 
 ## Output
-The resulting KMVs will be placed under `$OUTDIR/$RECORDING_ID.full.mkv`.
+The resulting MKVs will be placed under `$OUTDIR/$RECORDING_ID.full.mkv`.
 Where `$RECORDING_ID` is the relative path for the given recording; i.e: `//sco//url-path` - the last field in the input CSV file.
 
 If the `KALTURA_.*` ENV vars are set, `$OUTDIR/$RECORDING_ID.full.mkv` will then be uploaded to Kaltura.
