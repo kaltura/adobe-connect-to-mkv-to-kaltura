@@ -167,7 +167,9 @@ class Vconn1 < Test::Unit::TestCase
   end
 
   def ffmpeg_x11_grab(ffmpeg_bin,resolution, frame_rate, x_display, duration, recording_file)
-
+    # we crop the browser's address bar here because of https://github.com/mozilla/geckodriver/issues/1281
+    # if it's ever fixed, we could drop that and start Firefox in full screen mode with:
+    # @driver.manage.window.full_screen
     ffmpeg_x11grab_command=ffmpeg_bin + ' -s ' + resolution + ' -framerate ' + frame_rate.to_s + ' -f x11grab -i :' + x_display.to_s + ' -t ' + duration.to_s + ' -vf "crop=in_w:in_h-147" -y ' + recording_file.shellescape
     @logger.info('X11grab COMMAND IS: ' + ffmpeg_x11grab_command)
     

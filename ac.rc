@@ -12,13 +12,13 @@ MAX_CONCUR_PROCS_PROCS=7
 FFMPEG_BIN=ffmpeg
 FFPROBE_BIN=ffprobe
 
-# leave the KALTURA_* ENV vars commented if you only wish to convert the recording w/o ingest to Kaltura
+# leave the KALTURA_* ENV vars commented if you only wish to convert the recording w/o ingesting to Kaltura
 #KALTURA_BASE_ENDPOINT="https://www.kaltura.com"
 #KALTURA_PARTNER_ID=
 #KALTURA_PARTNER_SECRET=""
-# the target Kaltura category ID [in this example, the ID of "sub category"]
-#KALTURA_CAT_ID=
 # full path to the target category name
 #KALTURA_ROOT_CATEGORY_PATH="root category>sub category"
+# the target Kaltura category ID [in this example, the ID of "sub category"]
+#KALTURA_CAT_ID=
 
 export OUTDIR AC_ENDPOINT AC_USERNAME AC_PASSWD KALTURA_BASE_ENDPOINT KALTURA_PARTNER_ID KALTURA_PARTNER_SECRET KALTURA_CAT_ID KALTURA_ROOT_CATEGORY_PATH FFMPEG_BIN FFPROBE_BIN AC_LOGIN_REQUIRED
