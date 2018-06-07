@@ -109,7 +109,7 @@ static void findSquares(const Mat& image, vector<vector<Point> >& squares)
 }
 
 
-// the function finds the third biggest rect area in the image [the slide POD] and generates a new image out of it
+// the function finds the rect_elem_index biggest rect area in the image [the slide POD] and generates a new image out of it
 static void createSlide(Mat& image, const char *slide_output_path,const vector<vector<Point> >& squares, int rect_elem_index)
 {
     vector<int> sortIdx(squares.size());
