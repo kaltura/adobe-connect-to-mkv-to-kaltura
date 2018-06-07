@@ -15,7 +15,7 @@ def process_slides(xml)
   return slides_array
 end
 
-def ingest_to_kaltura(client,base_endpoint,partner_id, secret, parent_cat_id, full_cat_path, cat_name, entry_name, meeting_id, vid_file_path)
+def ingest_to_kaltura(client, base_endpoint, partner_id, secret, parent_cat_id, full_cat_path, cat_name, entry_name, meeting_id, vid_file_path)
 
   # check whether category already exists
   filter = KalturaCategoryFilter.new()
@@ -105,7 +105,7 @@ def ingest_slides_to_kaltura(client, entry_id, slides_metatdata_array, images_pa
 end
 
 if ARGV.length < 5
-  puts "Usage: " + __FILE__ + "<meeting id> </path/to/vid/file> </path/to/slides/metadata/xml> </path/to/images/dir> <entry name>"
+  puts "Usage: " + __FILE__ + " <meeting id> </path/to/vid/file> </path/to/slides/metadata/xml> </path/to/images/dir> <entry name>"
   exit 1
 end
 
