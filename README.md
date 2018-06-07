@@ -23,6 +23,15 @@ This code generates MKV files out of AC recordings and ingests them onto Kaltura
 
 ## Configuration
 
+### Flash plugin 
+In order for this to work, the Flash plugin must be loaded by Firefox.
+Download `libflashplayer.so` from Adobe and symlink to `/usr/lib/mozilla/plugins/flashplugin-alternative.so`
+
+For example, if you've placed the plugin under /usr/lib/adobe-flashplugin/libflashplayer.so, run:
+```sh
+# ln -s /usr/lib/adobe-flashplugin/libflashplayer.so /usr/lib/mozilla/plugins/flashplugin-alternative.so
+```
+
 ### ENV vars
 Set the needed values in `ac.rc` and make sure it is sourced before running the wrapper as the
 various scripts rely on the ENV vars it exports. You can just add:
@@ -79,7 +88,6 @@ $ ac_wrapper.sh </path/to/asset/list/csv>
 ``` 
 
 Where `</path/to/asset/list/csv>` is the path to a CSV file in the format described above.
-
 
 
 ## Output
