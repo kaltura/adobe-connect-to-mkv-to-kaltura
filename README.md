@@ -78,6 +78,7 @@ This code is capable of processing multiple recordings concurrently and the only
 
 In order to process several recordings simultaneously, a wrapper around `xvfb-run` is needed. 
 `xvfb-run-safe` is expected to be found in a directory included in the `PATH` ENV var. If need be, you can change `ac_wrapper.sh` so that it looks for it elsewhere.
+
 The number of concurrent jobs to run is determined in `ac_wrapper.sh` based on the value of the `MAX_CONCUR_PROCS` ENV var.
 
 ## Running
