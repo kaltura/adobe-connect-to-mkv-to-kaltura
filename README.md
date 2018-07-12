@@ -7,7 +7,7 @@ This code generates MKV files out of AC recordings and ingests them onto Kaltura
 - Download the ZIP archive and concat the audio FLVs into one MP3 using FFmpeg
 - Using Selenium and Mozilla's Geckodriver, launch Firefox with Xvfb and navigate to the recording's URL so that it plays using the Adobe SWF
 - Use FFmpeg's x11grab option to capture the screen display
-- Once done, use FFmpeg's scene detector feature to determine when the recording had actually started [this is needed because their app takes a long time to load and there's no other way to determine how long it actually took]
+- Once done, use FFmpeg's scene detection feature to determine when the recording had actually started [this is needed because the AC app takes a long time to load and there's no other way to determine how long it actually took]
 - Merge the audio and video files and use the Kaltura API to ingest the resulting file
 
 ## Pre-requisites
