@@ -77,8 +77,7 @@ $ ./generate_recording_list.rb /path/to/sco/ids/file > /path/to/asset/list/csv
 This code is capable of processing multiple recordings concurrently and the only real limitation is HW resources [namely: CPU, RAM].
 
 In order to process several recordings simultaneously, a wrapper around `xvfb-run` is needed. 
-`xvfb-run-safe` needs to be placed somewhere in PATH or else, you can change `ac_wrapper.sh` so
-that it looks for it elsewhere.
+`xvfb-run-safe` is expected to be found in a directory included in the `PATH` ENV var. If need be, you can change `ac_wrapper.sh` so that it looks for it elsewhere.
 The number of concurrent jobs to run is determined in `ac_wrapper.sh` based on the value of the `MAX_CONCUR_PROCS` ENV var.
 
 ## Running
