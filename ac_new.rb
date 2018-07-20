@@ -162,7 +162,6 @@ class Vconn1 < Test::Unit::TestCase
 	return
       end
     end
-    
     ingest_to_kaltura(ENV['KALTURA_BASE_ENDPOINT'],ENV['KALTURA_PARTNER_ID'], ENV['KALTURA_PARTNER_SECRET'], ENV['KALTURA_CAT_ID'], ENV['KALTURA_ROOT_CATEGORY_PATH'], cat_name, entry_name, meeting_id, full_recording_file)
   end
 
