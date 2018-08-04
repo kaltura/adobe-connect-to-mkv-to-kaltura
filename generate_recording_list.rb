@@ -6,7 +6,8 @@ def output_data(connect,sco_id)
         fresponse = connect.sco_info(sco_id: folder_id)
         folder_name = fresponse.at_xpath('//sco//name').text
         print sco_id +',"'+folder_name.tr(',', '').tr('(','').tr(')','') + '","' + response.at_xpath('//sco//name').text.tr(',', '').tr('(','').tr(')','') + '",' 
-        print response.at_xpath('//sco//url-path').text.tr('/', '') + "\n"
+        print response.at_xpath('//sco//url-path').text.tr('/', '') + ","
+        print DateTime.parse(response.at_xpath('//sco/date-created').text).to_time.to_i.to_s + "\n"
 end
 
 if ARGV.length < 1
