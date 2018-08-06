@@ -154,7 +154,7 @@ class Vconn1 < Test::Unit::TestCase
     end
 
     # verify the Kaltura params are set before attempting to ingest to Kaltura
-    kaltura_mandatory_vars = ['KALTURA_BASE_ENDPOINT', 'KALTURA_PARTNER_ID', 'KALTURA_PARTNER_SECRET', 'KALTURA_CAT_ID', 'KALTURA_ROOT_CATEGORY_PATH', 'KALTURA_METADATA_PROFILE_ID', 'SCO_ID', 'ORIG_CREATED_AT'] 
+    kaltura_mandatory_vars = ['KALTURA_BASE_ENDPOINT', 'KALTURA_PARTNER_ID', 'KALTURA_PARTNER_SECRET', 'KALTURA_CAT_ID', 'KALTURA_ROOT_CATEGORY_PATH', 'SCO_ID'] 
     
     kaltura_mandatory_vars.each do |mandatory_var|
       if ! ENV[mandatory_var] or ENV[mandatory_var].empty?
@@ -166,7 +166,7 @@ class Vconn1 < Test::Unit::TestCase
     sco_id=ENV['SCO_ID']
     orig_created_at=ENV['ORIG_CREATED_AT']
     
-    ingest_to_kaltura(ENV['KALTURA_BASE_ENDPOINT'],ENV['KALTURA_PARTNER_ID'], ENV['KALTURA_PARTNER_SECRET'], ENV['KALTURA_CAT_ID'], ENV['KALTURA_ROOT_CATEGORY_PATH'], cat_name, entry_name, meeting_id, sco_id, ENV['KALTURA_METADATA_PROFILE_ID'], orig_created_at, full_recording_file)
+    ingest_to_kaltura(ENV['KALTURA_BASE_ENDPOINT'],ENV['KALTURA_PARTNER_ID'], ENV['KALTURA_PARTNER_SECRET'], ENV['KALTURA_CAT_ID'], ENV['KALTURA_ROOT_CATEGORY_PATH'], cat_name, entry_name, meeting_id, sco_id, full_recording_file)
   end
 
   def ffmpeg_x11_grab(ffmpeg_bin,resolution, frame_rate, x_display, duration, recording_file)
@@ -225,7 +225,7 @@ class Vconn1 < Test::Unit::TestCase
     return true
   end
 
-  def ingest_to_kaltura(base_endpoint,partner_id, secret, parent_cat_id, full_cat_path, cat_name, entry_name, meeting_id, sco_id, metadata_profile_id, orig_created_at, vid_file_path)
+  def ingest_to_kaltura(base_endpoint,partner_id, secret, parent_cat_id, full_cat_path, cat_name, entry_name, meeting_id, sco_id, vid_file_path)
     config = KalturaConfiguration.new()
     config.service_url = base_endpoint
     client = KalturaClient.new(config);
@@ -265,16 +265,23 @@ class Vconn1 < Test::Unit::TestCase
     entry = KalturaMediaEntry.new()
     entry.media_type = KalturaMediaType::VIDEO
     entry.name = entry_name
-    #entry.description = "AC original ID: " + meeting_id
-    entry.reference_id=sco_id
+    entry.reference_id = sco_id
     entry.tags = meeting_id
     #entry.categories=full_cat_path + ">" +cat_name
-
+    if ENV['USER_ID']
+      entry.user_id=ENV['USER_ID']
+    end
+    
     results = client.media_service.add(entry)
     entry_id = results.id
     
-    metadata = "<metadata><OriginalCreationDate>#{orig_created_at}</OriginalCreationDate></metadata>"
-    client.metadata_service.add(metadata_profile_id, Kaltura::KalturaMetadataObjectType::ENTRY, entry_id, metadata)
+    if ENV['ORIG_CREATED_AT'] && ENV['KALTURA_METADATA_PROFILE_ID']
+      metadata_profile_id = ENV['KALTURA_METADATA_PROFILE_ID']
+      orig_created_at = ENV['ORIG_CREATED_AT']
+      metadata = "<metadata><OriginalCreationDate>#{orig_created_at}</OriginalCreationDate></metadata>"
+      client.metadata_service.add(metadata_profile_id, Kaltura::KalturaMetadataObjectType::ENTRY, entry_id, metadata)
+    end
+    
     
     resource = KalturaUploadedFileTokenResource.new()
     resource.token = upload_token_id
