@@ -10,8 +10,7 @@ def output_data(connect,sco_id)
 	owner_name = owner_info.at_xpath('//owner-principal//name').text
 	owner_email = owner_info.at_xpath('//owner-principal//email').text
 	owner_id = owner_info.at_xpath('//owner-principal//login').text
-        print sco_id +',"'+folder_name.tr(',', '').tr('(','').tr(')','') + '","' + response.at_xpath('//sco//name').text.tr(',', '').tr('(','').tr(')','') + '",' + url_path + ',"' + owner_email + '",' + owner_name + '",' + owner_id + "\n"
-        #print response.at_xpath('//sco//url-path').text.tr('/', '') + "\n"
+        print sco_id +',"'+folder_name.tr(',', '').tr('(','').tr(')','') + '","' + response.at_xpath('//sco//name').text.tr(',', '').tr('(','').tr(')','') + '",' + url_path + ',"' + owner_email + '","' + owner_name + '",' + owner_id + "\n"
 end
 
 if ARGV.length < 1
