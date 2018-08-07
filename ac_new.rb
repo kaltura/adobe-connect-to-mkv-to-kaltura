@@ -154,16 +154,19 @@ class Vconn1 < Test::Unit::TestCase
     end
 
     # verify the Kaltura params are set before attempting to ingest to Kaltura
-    kaltura_mandatory_vars = ['KALTURA_BASE_ENDPOINT', 'KALTURA_PARTNER_ID', 'KALTURA_PARTNER_SECRET', 'KALTURA_CAT_ID', 'KALTURA_ROOT_CATEGORY_PATH'] 
+    kaltura_mandatory_vars = ['KALTURA_BASE_ENDPOINT', 'KALTURA_PARTNER_ID', 'KALTURA_PARTNER_SECRET', 'SCO_ID'] 
     
     kaltura_mandatory_vars.each do |mandatory_var|
       if ! ENV[mandatory_var] or ENV[mandatory_var].empty?
-	@logger.warn('Skipping Kaltura ingestion, missing ENV var ' + mandatory_var)
-	return
+	      @logger.warn('Skipping Kaltura ingestion, missing ENV var ' + mandatory_var)
+	      return
       end
     end
     
-    ingest_to_kaltura(ENV['KALTURA_BASE_ENDPOINT'],ENV['KALTURA_PARTNER_ID'], ENV['KALTURA_PARTNER_SECRET'], ENV['KALTURA_CAT_ID'], ENV['KALTURA_ROOT_CATEGORY_PATH'], cat_name, entry_name, meeting_id, full_recording_file)
+    sco_id=ENV['SCO_ID']
+    
+    client = init_client(ENV['KALTURA_BASE_ENDPOINT'],ENV['KALTURA_PARTNER_ID'], ENV['KALTURA_PARTNER_SECRET'])
+    ingest_to_kaltura(client, entry_name, meeting_id, sco_id, full_recording_file)
   end
 
   def ffmpeg_x11_grab(ffmpeg_bin,resolution, frame_rate, x_display, duration, recording_file)
@@ -221,8 +224,8 @@ class Vconn1 < Test::Unit::TestCase
     end
     return true
   end
-
-  def ingest_to_kaltura(base_endpoint,partner_id, secret, parent_cat_id, full_cat_path, cat_name, entry_name, meeting_id, vid_file_path)
+  
+  def init_client(base_endpoint,partner_id, secret)
     config = KalturaConfiguration.new()
     config.service_url = base_endpoint
     client = KalturaClient.new(config);
@@ -234,20 +237,60 @@ class Vconn1 < Test::Unit::TestCase
 	  nil,
 	  "disableentitlement"
     )
+    
+    return client;
+  end
+  
+  def get_or_create_metadata_profile_id(client, metadata_profile_sys_name)
+    metadata_profile_filter = KalturaMetadataProfileFilter.new()
+    metadata_profile_filter.system_name_equal = metadata_profile_sys_name
+    response = client.metadata_profile_service.list(metadata_profile_filter)
+    
+    if response.total_count >  0
+      return response.objects[0].id
+    end
+    
+    # if this metadata profile does not exist - create it.
+    metadata_profile = KalturaMetadataProfile.new()
+    metadata_profile.name = "Adobe Connect Migration"
+    metadata_profile.system_name = metadata_profile_sys_name
+    metadata_profile.metadata_object_type = Kaltura::KalturaMetadataObjectType::ENTRY
+    xsd = File.read(File.dirname(__FILE__) + File::SEPARATOR + 'ac_migration.xsd')
+    
+    metadata_profile = client.metadata_profile_service.add(metadata_profile, xsd)
+    if metadata_profile
+      return metadata_profile.id
+    end
+    
+    return false
+  end
 
+  def create_category_association(client, parent_cat_id, full_cat_path, cat_name, entry_id)
     # check whether category already exists
     filter = KalturaCategoryFilter.new()
     filter.full_name_equal = full_cat_path + ">" +cat_name
     pager = KalturaFilterPager.new()
     results = client.category_service.list(filter, pager)
-    # if not, create it
+    ## if not, create it
+    category_id = false
     if !results.total_count
-		category = KalturaCategory.new()
-		category.parent_id=parent_cat_id
-		category.name = cat_name
-		results = client.category_service.add(category)
-		@logger.info("Created category: " + cat_name + ", cat ID: "+results.id)
+      category = KalturaCategory.new()
+      category.parent_id = parent_cat_id
+      category.name = cat_name
+      results = client.category_service.add(category)
+      @logger.info("Created category: " + cat_name + ", cat ID: " + results.id)
+      category_id = results.id
+    else
+      category_id = results.objects[0].id
     end
+    
+    category_entry = KalturaCategoryEntry.new()
+    category_entry.entry_id = entry_id;
+    category_entry.category_id = category_id
+    response = client.category_entry_service.add(category_entry)
+  end
+
+  def ingest_to_kaltura(client, entry_name, meeting_id, sco_id, vid_file_path)    
     upload_token = KalturaUploadToken.new()
 
     results = client.upload_token_service.add(upload_token)
@@ -262,12 +305,33 @@ class Vconn1 < Test::Unit::TestCase
     entry = KalturaMediaEntry.new()
     entry.media_type = KalturaMediaType::VIDEO
     entry.name = entry_name
-    entry.description = "AC original ID: " + meeting_id
+    entry.reference_id = sco_id
     entry.tags = meeting_id
-    entry.categories=full_cat_path + ">" +cat_name
-
+    
+    if ENV['USER_ID']
+      entry.user_id=ENV['USER_ID']
+    end
+    
+    if ENV['DESCRIPTION']
+      entry.description = ENV['DESCRIPTION']
+    end
+    
     results = client.media_service.add(entry)
     entry_id = results.id
+    
+    if ENV['KALTURA_ROOT_CATEGORY_ID'] && ENV['KALTURA_ROOT_CATEGORY_PATH']
+      create_category_association(client, ENV['KALTURA_ROOT_CATEGORY_ID'], ENV['KALTURA_ROOT_CATEGORY_PATH'], ENV['CATEGORY_NAME'], entry_id)
+    end
+    
+    if ENV['ORIG_CREATED_AT'] && ENV['KALTURA_METADATA_SYSTEM_NAME']
+      #retrieve metadata profile ID
+      metadata_profile_id = get_or_create_metadata_profile_id(client, ENV['KALTURA_METADATA_SYSTEM_NAME'])
+      if metadata_profile_id
+        metadata = sprintf(ENV['KALTURA_METADATA_XML'], {:orig_created_at => ENV['ORIG_CREATED_AT']})
+        client.metadata_service.add(metadata_profile_id, Kaltura::KalturaMetadataObjectType::ENTRY, entry_id, metadata)
+      end
+    end
+    
     resource = KalturaUploadedFileTokenResource.new()
     resource.token = upload_token_id
 
