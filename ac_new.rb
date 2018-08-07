@@ -251,7 +251,7 @@ class Vconn1 < Test::Unit::TestCase
     
     metadata_profile = KalturaMetadataProfile.new()
     metadata_profile.name = "Adobe Connect Migration"
-    metadata_profile.system_name = ENV['KALTURA_METADATA_SYSTEM_NAME']
+    metadata_profile.system_name = metadata_profile_sys_name
     metadata_profile.metadata_object_type = Kaltura::KalturaMetadataObjectType::ENTRY
     xsd = File.read('ac_migration.xsd')
     
