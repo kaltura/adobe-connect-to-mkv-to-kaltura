@@ -164,7 +164,6 @@ class Vconn1 < Test::Unit::TestCase
     end
     
     sco_id=ENV['SCO_ID']
-    orig_created_at=ENV['ORIG_CREATED_AT']
     
     ingest_to_kaltura(ENV['KALTURA_BASE_ENDPOINT'],ENV['KALTURA_PARTNER_ID'], ENV['KALTURA_PARTNER_SECRET'], ENV['KALTURA_CAT_ID'], ENV['KALTURA_ROOT_CATEGORY_PATH'], cat_name, entry_name, meeting_id, sco_id, full_recording_file)
   end
@@ -224,8 +223,8 @@ class Vconn1 < Test::Unit::TestCase
     end
     return true
   end
-
-  def ingest_to_kaltura(base_endpoint,partner_id, secret, parent_cat_id, full_cat_path, cat_name, entry_name, meeting_id, sco_id, vid_file_path)
+  
+  def init_client(base_endpoint,partner_id, secret)
     config = KalturaConfiguration.new()
     config.service_url = base_endpoint
     client = KalturaClient.new(config);
@@ -237,20 +236,50 @@ class Vconn1 < Test::Unit::TestCase
 	  nil,
 	  "disableentitlement"
     )
+    
+    return client;
+  end
+  
+  def retrieve_metadata_profile_id(client, metadata_profile_sys_name)
+    metadata_profile_filter = KalturaMetadataProfileFilter.new()
+    metadata_profile_filter.system_name_equal = metadata_profile_sys_name
+    response = client.metadata_profile_service.list(metadata_profile_filter)
+    
+    if response.total_count >  0
+      return response.objects[0]
+    end
+    
+    metadata_profile = KalturaMetadataProfile.new()
+    metadata_profile.name = "Adobe Connect Migration"
+    metadata_profile.system_name = ENV['KALTURA_METADATA_SYSTEM_NAME']
+    metadata_profile.metadata_object_type = Kaltura::KalturaMetadataObjectType::ENTRY
+    xsd = File.read('ac_migration.xsd')
+    
+    metadata_profile = client.metadata_profile_service.add(metadata_profile, xsd)
+    if metadata_profile
+      return metadata_profile.id
+    end
+    
+    return nil
+  end
+
+  def ingest_to_kaltura(base_endpoint,partner_id, secret, parent_cat_id, full_cat_path, cat_name, entry_name, meeting_id, sco_id, vid_file_path)
+    client = init_client(base_endpoint, partner_id, secret)
 
     # check whether category already exists
-    filter = KalturaCategoryFilter.new()
-    filter.full_name_equal = full_cat_path + ">" +cat_name
-    pager = KalturaFilterPager.new()
-    results = client.category_service.list(filter, pager)
-    # if not, create it
-    if !results.total_count
-		category = KalturaCategory.new()
-		category.parent_id=parent_cat_id
-		category.name = cat_name
-		results = client.category_service.add(category)
-		@logger.info("Created category: " + cat_name + ", cat ID: "+results.id)
-    end
+    #filter = KalturaCategoryFilter.new()
+    #filter.full_name_equal = full_cat_path + ">" +cat_name
+    #pager = KalturaFilterPager.new()
+    #results = client.category_service.list(filter, pager)
+    ## if not, create it
+    #if !results.total_count
+		#  category = KalturaCategory.new()
+		#  category.parent_id = parent_cat_id
+		#  category.name = cat_name
+		#  results = client.category_service.add(category)
+		#  @logger.info("Created category: " + cat_name + ", cat ID: " + results.id)
+    #end
+    
     upload_token = KalturaUploadToken.new()
 
     results = client.upload_token_service.add(upload_token)
@@ -275,13 +304,15 @@ class Vconn1 < Test::Unit::TestCase
     results = client.media_service.add(entry)
     entry_id = results.id
     
-    if ENV['ORIG_CREATED_AT'] && ENV['KALTURA_METADATA_PROFILE_ID']
-      metadata_profile_id = ENV['KALTURA_METADATA_PROFILE_ID']
-      orig_created_at = ENV['ORIG_CREATED_AT']
-      metadata = "<metadata><OriginalCreationDate>#{orig_created_at}</OriginalCreationDate></metadata>"
-      client.metadata_service.add(metadata_profile_id, Kaltura::KalturaMetadataObjectType::ENTRY, entry_id, metadata)
+    if ENV['ORIG_CREATED_AT'] && ENV['KALTURA_METADATA_SYSTEM_NAME']
+      #retrieve metadata profile ID
+      metadata_profile_id = retrieve_metadata_profile_id(client, ENV['KALTURA_METADATA_SYSTEM_NAME'])
+      if metadata_profile_id
+        orig_created_at = ENV['ORIG_CREATED_AT']
+        metadata = ENV['KALTURA_METADATA_XML']
+        client.metadata_service.add(metadata_profile_id, Kaltura::KalturaMetadataObjectType::ENTRY, entry_id, metadata)
+      end
     end
-    
     
     resource = KalturaUploadedFileTokenResource.new()
     resource.token = upload_token_id
