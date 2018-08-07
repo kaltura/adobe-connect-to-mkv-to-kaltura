@@ -34,7 +34,7 @@ apt update
 apt install -y sysvinit-utils curl unzip firefox adobe-flashplugin ffmpeg ruby ruby-dev libffi-dev xvfb zlib1g-dev libxml2-dev dos2unix adobe-flashplugin build-essential patch wget
 gem install adobe_connect selenium-webdriver kaltura-client test-unit logger
 wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VER/geckodriver-$GECKODRIVER_VER-linux64.tar.gz -O /tmp/geckodriver-$GECKODRIVER_VER-linux64.tar.gz
-tar zxvf geckodriver-${GECKODRIVER_VER}-linux64.tar.gz
+tar zxvf /tmp/geckodriver-${GECKODRIVER_VER}-linux64.tar.gz
 mv geckodriver /usr/local/bin
 wget https://github.com/kaltura/adobe-connect-to-mkv-to-kaltura/archive/master.zip -O /tmp/adobe-connect-to-mkv-to-kaltura.zip
 unzip -qoo /tmp/adobe-connect-to-mkv-to-kaltura.zip
