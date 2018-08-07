@@ -8,7 +8,6 @@ def output_data(connect,sco_id)
         folder_id = response.at_xpath('//sco//@folder-id')
         fresponse = connect.sco_info(sco_id: folder_id)
         folder_name = fresponse.at_xpath('//sco//name').text
-<<<<<<< HEAD
         print sco_id +',"'+folder_name.tr(',', '').tr('(','').tr(')','') + '","' + response.at_xpath('//sco//name').text.tr(',', '').tr('(','').tr(')','') + '",' 
         print response.at_xpath('//sco//description') ? '"' + response.at_xpath('//sco//description').text.tr(',', '').tr('(','').tr(')','') + '",' : ','
         print response.at_xpath('//sco//url-path').text.tr('/', '') + ','
