@@ -246,7 +246,7 @@ class Vconn1 < Test::Unit::TestCase
     response = client.metadata_profile_service.list(metadata_profile_filter)
     
     if response.total_count >  0
-      return response.objects[0]
+      return response.objects[0].id
     end
     
     metadata_profile = KalturaMetadataProfile.new()
@@ -308,8 +308,7 @@ class Vconn1 < Test::Unit::TestCase
       #retrieve metadata profile ID
       metadata_profile_id = retrieve_metadata_profile_id(client, ENV['KALTURA_METADATA_SYSTEM_NAME'])
       if metadata_profile_id
-        orig_created_at = ENV['ORIG_CREATED_AT']
-        metadata = ENV['KALTURA_METADATA_XML']
+        metadata = sprintf(ENV['KALTURA_METADATA_XML'], {:orig_created_at => ENV['ORIG_CREATED_AT']})
         client.metadata_service.add(metadata_profile_id, Kaltura::KalturaMetadataObjectType::ENTRY, entry_id, metadata)
       end
     end

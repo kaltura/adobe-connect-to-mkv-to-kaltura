@@ -97,6 +97,9 @@ Where `$RECORDING_ID` is the relative path for the given recording; i.e: `//sco/
 If the `KALTURA_.*` ENV vars are set, `$OUTDIR/$RECORDING_ID.full.mkv` will then be uploaded to Kaltura.
 Full logs are written to `/tmp/ac_$RECORDING_ID.log`. If there's a problem, start by looking there.
 
+If the `KALTURA_METADATA_SYSTEM_NAME` and `KALTURA_METADATA_XML` ENV vars are set, the original creation date of the Adobe Connect recording will be saved as a custom metadata field for the entry. If a metadata profile with system name KALTURA_METADATA_SYSTEM_NAME does not exist, it will be created by the script.
+
+If the `SCOID_USER_MAPPING` ENV var is set, the generate_recording_list.rb script will use this mapping file to map SCO IDs to new content owners. If the ENV var is not set, the script will default to using the data returned by the Adobe Connect API to set the content owners.
 
 ## Contributing
 * Use the repository issue tracker to report bugs or submit feature requests

@@ -1,0 +1,38 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:element name="metadata">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element id="md_4D0CFED6-BB1A-EF2D-8881-02066DA8272D" name="OriginalCreationDate" minOccurs="0" maxOccurs="1" type="dateType">
+          <xsd:annotation>
+            <xsd:documentation></xsd:documentation>
+            <xsd:appinfo>
+              <label>Original Creation Date</label>
+              <key>Original Creation Date</key>
+              <searchable>true</searchable>
+              <timeControl>false</timeControl>
+              <description></description>
+            </xsd:appinfo>
+          </xsd:annotation>
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:complexType name="textType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string"/>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <xsd:complexType name="dateType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:long"/>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <xsd:complexType name="objectType">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string"/>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <xsd:simpleType name="listType">
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+</xsd:schema>
