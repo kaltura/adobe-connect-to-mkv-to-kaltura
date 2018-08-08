@@ -277,9 +277,16 @@ class Vconn1 < Test::Unit::TestCase
       category = KalturaCategory.new()
       category.parent_id = parent_cat_id
       category.name = cat_name
-      results = client.category_service.add(category)
-      @logger.info("Created category: " + cat_name + ", cat ID: " + results.id)
-      category_id = results.id
+      begin
+	results = client.category_service.add(category)
+	@logger.info("Created category: " + cat_name + ", cat ID: " + results.id.to_s)
+	category_id = results.id
+      rescue Kaltura::KalturaAPIError => e
+	  @logger.error("Exception Class: #{ e.class.name }")
+	  @logger.error("Exception Message: #{ e.message }")
+	  # enable to get a BT
+	  # @logger.info("Exception Message: #{ e.backtrace }")
+      end
     else
       category_id = results.objects[0].id
     end
@@ -287,7 +294,12 @@ class Vconn1 < Test::Unit::TestCase
     category_entry = KalturaCategoryEntry.new()
     category_entry.entry_id = entry_id;
     category_entry.category_id = category_id
-    response = client.category_entry_service.add(category_entry)
+    begin
+      response = client.category_entry_service.add(category_entry)
+    rescue Kaltura::KalturaAPIError => e
+	@logger.error("Exception Class: #{ e.class.name }")
+	@logger.error("Exception Message: #{ e.message }")
+    end
   end
 
   def ingest_to_kaltura(client, entry_name, meeting_id, sco_id, vid_file_path)    
