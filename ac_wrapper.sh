@@ -29,7 +29,7 @@ while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORI
         done
         CATEGORY_NAME=`echo $CATEGORY_NAME|sed 's^"^^g'`
         MEETING_NAME=`echo $MEETING_NAME|sed 's^"^^g'`
-		DESCRIPTION=`echo $DESCRIPTION|sed 's^"^^g'`
+	DESCRIPTION=`echo $DESCRIPTION|sed 's^"^^g'`
         export SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORIG_CREATED_AT USER_ID
         nohup sh -c "xvfb-run-safe -s \"-auth /tmp/xvfb.auth -ac -screen 0 1280x720x24\" $BASEDIR/ac_new.rb " > /tmp/ac_$MEETING_ID.log 2>&1 &
 	sleep 2
