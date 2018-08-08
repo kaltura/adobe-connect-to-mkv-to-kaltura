@@ -274,11 +274,11 @@ class Vconn1 < Test::Unit::TestCase
     ## if not, create it
     category_id = false
     if results.total_count == 0
-		  category = KalturaCategory.new()
-		  category.parent_id = parent_cat_id
-		  category.name = cat_name
-		  results = client.category_service.add(category)
-		  @logger.info("Created category: " + cat_name + ", cat ID: " + results.id.to_s)
+	category = KalturaCategory.new()
+	category.parent_id = parent_cat_id
+	category.name = cat_name
+	results = client.category_service.add(category)
+	@logger.info("Created category: " + cat_name + ", cat ID: " + results.id.to_s)
       category_id = results.id
     else
       category_id = results.objects[0].id
