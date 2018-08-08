@@ -273,7 +273,7 @@ class Vconn1 < Test::Unit::TestCase
     results = client.category_service.list(filter, pager)
     ## if not, create it
     category_id = false
-    if !results.total_count
+    if results.total_count == 0
       category = KalturaCategory.new()
       category.parent_id = parent_cat_id
       category.name = cat_name
