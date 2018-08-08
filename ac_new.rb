@@ -253,9 +253,9 @@ class Vconn1 < Test::Unit::TestCase
     # if this metadata profile does not exist - create it.
     metadata_profile = KalturaMetadataProfile.new()
     metadata_profile.name = "Adobe Connect Migration"
-    metadata_profile.system_name = metadata_profile_sys_name
+    metadata_profile.system_name = ENV['KALTURA_METADATA_SYSTEM_NAME']
     metadata_profile.metadata_object_type = Kaltura::KalturaMetadataObjectType::ENTRY
-    xsd = File.read('ac_migration.xsd')
+    xsd = File.read(File.dirname(__FILE__) + File::SEPARATOR + 'ac_migration.xsd')
     
     metadata_profile = client.metadata_profile_service.add(metadata_profile, xsd)
     if metadata_profile
@@ -273,12 +273,12 @@ class Vconn1 < Test::Unit::TestCase
     results = client.category_service.list(filter, pager)
     ## if not, create it
     category_id = false
-    if !results.total_count
+    if results.total_count == 0
 		  category = KalturaCategory.new()
 		  category.parent_id = parent_cat_id
 		  category.name = cat_name
 		  results = client.category_service.add(category)
-		  @logger.info("Created category: " + cat_name + ", cat ID: " + results.id)
+		  @logger.info("Created category: " + cat_name + ", cat ID: " + results.id.to_s)
       category_id = results.id
     else
       category_id = results.objects[0].id
@@ -287,7 +287,11 @@ class Vconn1 < Test::Unit::TestCase
     category_entry = KalturaCategoryEntry.new()
     category_entry.entry_id = entry_id;
     category_entry.category_id = category_id
-    response = client.category_entry_service.add(category_entry)
+    begin
+      response = client.category_entry_service.add(category_entry)
+    rescue 
+      @logger.error("Error occurred associating entry #{entry_id} with category #{category_id}")
+    end
   end
 
   def ingest_to_kaltura(client, entry_name, meeting_id, sco_id, vid_file_path)    
@@ -319,19 +323,6 @@ class Vconn1 < Test::Unit::TestCase
     results = client.media_service.add(entry)
     entry_id = results.id
     
-    if ENV['KALTURA_ROOT_CATEGORY_ID'] && ENV['KALTURA_ROOT_CATEGORY_PATH']
-      create_category_association(client, ENV['KALTURA_ROOT_CATEGORY_ID'], ENV['KALTURA_ROOT_CATEGORY_PATH'], ENV['CATEGORY_NAME'], entry_id)
-    end
-    
-    if ENV['ORIG_CREATED_AT'] && ENV['KALTURA_METADATA_SYSTEM_NAME']
-      #retrieve metadata profile ID
-      metadata_profile_id = get_or_create_metadata_profile_id(client, ENV['KALTURA_METADATA_SYSTEM_NAME'])
-      if metadata_profile_id
-        metadata = sprintf(ENV['KALTURA_METADATA_XML'], {:orig_created_at => ENV['ORIG_CREATED_AT']})
-        client.metadata_service.add(metadata_profile_id, Kaltura::KalturaMetadataObjectType::ENTRY, entry_id, metadata)
-      end
-    end
-    
     resource = KalturaUploadedFileTokenResource.new()
     resource.token = upload_token_id
 
@@ -341,6 +332,24 @@ class Vconn1 < Test::Unit::TestCase
       return false
     end
     @logger.info("Uploaded " + vid_file_path + ", entry ID: " + results.id)
+    
+    if ENV['KALTURA_ROOT_CATEGORY_ID'] && ENV['KALTURA_ROOT_CATEGORY_PATH']
+      create_category_association(client, ENV['KALTURA_ROOT_CATEGORY_ID'], ENV['KALTURA_ROOT_CATEGORY_PATH'], ENV['CATEGORY_NAME'], entry_id)
+    end
+    
+    if ENV['ORIG_CREATED_AT'] && ENV['KALTURA_METADATA_SYSTEM_NAME']
+      #retrieve metadata profile ID
+      metadata_profile_id = get_or_create_metadata_profile_id(client, ENV['KALTURA_METADATA_SYSTEM_NAME'])
+      if metadata_profile_id
+        metadata = sprintf(ENV['KALTURA_METADATA_XML'], {:orig_created_at => ENV['ORIG_CREATED_AT']})
+        begin
+          client.metadata_service.add(metadata_profile_id, Kaltura::KalturaMetadataObjectType::ENTRY, entry_id, metadata)
+        rescue 
+          @logger.error("Error occurred creating orig_created_at custom metadata for entry #{entry_id}")
+        end
+      end
+    end
+    
     return results.id
   end  
 
