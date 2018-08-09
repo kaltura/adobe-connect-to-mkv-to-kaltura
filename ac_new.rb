@@ -274,12 +274,19 @@ class Vconn1 < Test::Unit::TestCase
     ## if not, create it
     category_id = false
     if results.total_count == 0
-		  category = KalturaCategory.new()
-		  category.parent_id = parent_cat_id
-		  category.name = cat_name
-		  results = client.category_service.add(category)
-		  @logger.info("Created category: " + cat_name + ", cat ID: " + results.id.to_s)
-      category_id = results.id
+      category = KalturaCategory.new()
+      category.parent_id = parent_cat_id
+      category.name = cat_name
+      begin
+        results = client.category_service.add(category)
+        @logger.info("Created category: " + cat_name + ", cat ID: " + results.id.to_s)
+        category_id = results.id
+      rescue Kaltura::KalturaAPIError => e
+      	  @logger.error("Exception Class: #{ e.class.name }")
+      	  @logger.error("Exception Message: #{ e.message }")
+      	  # enable to get a BT
+      	  # @logger.info("Exception Message: #{ e.backtrace }")
+      end
     else
       category_id = results.objects[0].id
     end
@@ -289,8 +296,11 @@ class Vconn1 < Test::Unit::TestCase
     category_entry.category_id = category_id
     begin
       response = client.category_entry_service.add(category_entry)
-    rescue 
-      @logger.error("Error occurred associating entry #{entry_id} with category #{category_id}")
+    rescue Kaltura::KalturaAPIError => e
+    	  @logger.error("Exception Class: #{ e.class.name }")
+    	  @logger.error("Exception Message: #{ e.message }")
+    	  # enable to get a BT
+    	  # @logger.info("Exception Message: #{ e.backtrace }")
     end
   end
 
@@ -344,8 +354,12 @@ class Vconn1 < Test::Unit::TestCase
         metadata = sprintf(ENV['KALTURA_METADATA_XML'], {:orig_created_at => ENV['ORIG_CREATED_AT']})
         begin
           client.metadata_service.add(metadata_profile_id, Kaltura::KalturaMetadataObjectType::ENTRY, entry_id, metadata)
-        rescue 
+        rescue Kaltura::KalturaAPIError => e
           @logger.error("Error occurred creating orig_created_at custom metadata for entry #{entry_id}")
+      	  @logger.error("Exception Class: #{ e.class.name }")
+      	  @logger.error("Exception Message: #{ e.message }")
+      	  # enable to get a BT
+      	  # @logger.info("Exception Message: #{ e.backtrace }")
         end
       end
     end
