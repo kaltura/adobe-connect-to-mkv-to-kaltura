@@ -104,7 +104,6 @@ class Vconn1 < Test::Unit::TestCase
     system basedir + '/get_ac_audio.sh ' + meeting_id 
     if $?.exitstatus != 0 or ! File.exist?(audio_file)
 	    @logger.error("Failed to obtain audio file :(")
-	    return false
     end
 
     # get duration from the MP3 file, we'll use that to determine how long ffmpeg should be recording for 
@@ -186,7 +185,7 @@ class Vconn1 < Test::Unit::TestCase
 
   def ffmpeg_detect_scene_start_time(ffmpeg_bin,recording_file,scene_number)
     ffmpeg_scene_command=ffmpeg_bin + " -i " + recording_file.shellescape + " -filter:v \"select='gt(scene,0.3)',showinfo\"  -frames:v " + scene_number.to_s + " -f null  - 2>&1|grep pts_time|sed 's/.*pts_time:\\([0-9.]*\\).*/\\1/'"
-    @logger.info('scene COMMAND IS: ' + ffmpeg_scene_command)
+    @logger.info('Scene command is: ' + ffmpeg_scene_command)
     first_scene, stdeerr, status = Open3.capture3(ffmpeg_scene_command)
     # because of our sed here, status.success? will always be true so need to insepct the value further.
     if first_scene.empty?
@@ -204,7 +203,7 @@ class Vconn1 < Test::Unit::TestCase
 
   def ffmpeg_trim_video(ffmpeg_bin, recording_file, start_time, duration, output_file)
     ffmpeg_trim_command=ffmpeg_bin + " -i " + recording_file.shellescape + " -ss " + start_time.to_s + " -t " + duration.to_s + " -c copy -strict -2 -an -y " + output_file.shellescape	
-    @logger.info("Trim COMMAND IS: " + ffmpeg_trim_command)
+    @logger.info("Trim command is: " + ffmpeg_trim_command)
     system ffmpeg_trim_command 
     if $?.exitstatus != 0
       @logger.error('ffmpeg trim command exited with ' + $?.exitstatus.to_s + ':(')
@@ -216,7 +215,7 @@ class Vconn1 < Test::Unit::TestCase
   def ffmpeg_merge_vid_and_aud_tracks(ffmpeg_bin, vid_file, aud_file, output_file)
     ffmpeg_merge_command=ffmpeg_bin + " -i " + vid_file.shellescape + " -i " + aud_file.shellescape + " -c copy -y " + output_file.shellescape
 
-    @logger.info("Merge COMMAND IS: " + ffmpeg_merge_command)
+    @logger.info("Merge command is: " + ffmpeg_merge_command)
     system ffmpeg_merge_command 
     if $?.exitstatus != 0
       @logger.error('ffmpeg audio and video merge command exited with ' + $?.exitstatus.to_s + ':(')
@@ -297,10 +296,10 @@ class Vconn1 < Test::Unit::TestCase
     begin
       response = client.category_entry_service.add(category_entry)
     rescue Kaltura::KalturaAPIError => e
-    	  @logger.error("Exception Class: #{ e.class.name }")
-    	  @logger.error("Exception Message: #{ e.message }")
-    	  # enable to get a BT
-    	  # @logger.info("Exception Message: #{ e.backtrace }")
+    	@logger.error("Exception Class: #{ e.class.name }")
+    	@logger.error("Exception Message: #{ e.message }")
+    	# enable to get a BT
+    	# @logger.info("Exception Message: #{ e.backtrace }")
     end
   end
 

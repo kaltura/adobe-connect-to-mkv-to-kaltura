@@ -19,7 +19,7 @@ fi
 if [ -x "`which dos2unix 2>/dev/null`" ];then
     dos2unix $ASSET_LIST_FILE
 fi
-while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORIG_CREATED_AT USER_ID <&3 ;do
+while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORIG_CREATED_AT USER_ID LOGIN USER_NAME <&3 ;do
 	set -o nounset
         CUR_XVFB=`pidof Xvfb |wc -w`
         while [ ! $CUR_XVFB -lt $MAX_CONCUR_PROCS ];do
