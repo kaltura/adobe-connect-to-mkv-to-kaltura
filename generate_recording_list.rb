@@ -14,7 +14,9 @@ def output_data(connect, sco_id)
   print DateTime.parse(response.at_xpath('//sco/date-created').text).to_time.to_i.to_s + ','
   if $user_mapping
     for row in $user_mapping do
-      print row[1] if row[0] == sco_id
+      if row[0] == sco_id
+        print row[1]
+      end
     end
   else
     url_path = response.at_xpath('//sco//url-path').text.tr('/', '')
@@ -25,7 +27,7 @@ def output_data(connect, sco_id)
   print "\n"
 end
 
-if ARGV.empty?
+if ARGV.length < 1
   puts 'Usage: ' + __FILE__ + ' </path/to/sco/list>'
   exit 1
 end

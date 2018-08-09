@@ -34,7 +34,7 @@ Download `libflashplayer.so` from Adobe and symlink to `/usr/lib/mozilla/plugins
 For example, if you've placed the plugin under /usr/lib/adobe-flashplugin/libflashplayer.so, run:
 
 ```sh
-ln -s /usr/lib/adobe-flashplugin/libflashplayer.so /usr/lib/mozilla/plugins/flashplugin-alternative.so
+# ln -s /usr/lib/adobe-flashplugin/libflashplayer.so /usr/lib/mozilla/plugins/flashplugin-alternative.so
 ```
 
 ### ENV vars
@@ -83,7 +83,7 @@ SCO-ID,SCO-FOLDER-NAME,SCO-NAME,PATH-URL
 To generate a list of recordings to process, run:
 
 ```sh
-./generate_recording_list.rb /path/to/sco/ids/file > /path/to/asset/list/csv
+$ ./generate_recording_list.rb /path/to/sco/ids/file > /path/to/asset/list/csv
 ```
 
 ### Parallel processing
@@ -100,7 +100,7 @@ The number of concurrent jobs to run is determined in `ac_wrapper.sh` based on t
 Once ready, run:
 
 ```sh
-./ac_wrapper.sh </path/to/asset/list/csv>
+$ ./ac_wrapper.sh </path/to/asset/list/csv>
 ```
 
 Where `</path/to/asset/list/csv>` is the path to a CSV file in the format described above.

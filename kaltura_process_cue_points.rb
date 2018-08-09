@@ -12,24 +12,24 @@ def process_slides(xml)
     my_slide = { title: title, content: content }
     slides_array.push(my_slide)
   end
-  slides_array
+  return slides_array
 end
 
 def ingest_to_kaltura(client, _base_endpoint, _partner_id, _secret, parent_cat_id, full_cat_path, cat_name, entry_name, meeting_id, vid_file_path)
   # check whether category already exists
-  filter = KalturaCategoryFilter.new
+  filter = KalturaCategoryFilter.new()
   filter.full_name_equal = full_cat_path + '>' + cat_name
-  pager = KalturaFilterPager.new
+  pager = KalturaFilterPager.new()
   results = client.category_service.list(filter, pager)
   # if not, create it
-  unless results.total_count
-    category = KalturaCategory.new
+  if !results.total_count
+    category = KalturaCategory.new()
     category.parent_id = parent_cat_id
     category.name = cat_name
     results = client.category_service.add(category)
     puts('Created category: ' + cat_name + ', cat ID: ' + results.id)
   end
-  upload_token = KalturaUploadToken.new
+  upload_token = KalturaUploadToken.new()
 
   results = client.upload_token_service.add(upload_token)
   upload_token_id = results.id
@@ -40,7 +40,7 @@ def ingest_to_kaltura(client, _base_endpoint, _partner_id, _secret, parent_cat_i
   resume_at = -1
 
   results = client.upload_token_service.upload(upload_token_id, file_data, resume, final_chunk, resume_at)
-  entry = KalturaBaseEntry.new
+  entry = KalturaBaseEntry.new()
   entry.name = entry_name
   type = KalturaEntryType::AUTOMATIC
   entry.description = 'AC original ID: ' + meeting_id
@@ -50,16 +50,16 @@ def ingest_to_kaltura(client, _base_endpoint, _partner_id, _secret, parent_cat_i
   results = client.base_entry_service.add(entry, type)
 
   entry_id = results.id
-  resource = KalturaUploadedFileTokenResource.new
+  resource = KalturaUploadedFileTokenResource.new()
   resource.token = upload_token_id
 
   results = client.base_entry_service.add_content(entry_id, resource)
-  unless defined? results.id
+  if !defined? results.id
     puts('base_entry_service.add_content() failed:(')
     return false
   end
   puts('Uploaded ' + vid_file_path + ', entry ID: ' + results.id)
-  results.id
+  return results.id
 end
 
 def ingest_slides_to_kaltura(client, entry_id, slides_metatdata_array, images_path)
@@ -80,14 +80,14 @@ def ingest_slides_to_kaltura(client, entry_id, slides_metatdata_array, images_pa
       slide_content = slides_metatdata_array[seq][:content]
     end
 
-    cue_point = KalturaThumbCuePoint.new
+    cue_point = KalturaThumbCuePoint.new()
     cue_point.entry_id = entry_id
     cue_point.start_time = round_ms_time
     cue_point.system_name = slide_system_name
     cue_point.title = slide_title
     cue_point.description = slide_content
     cue_res = client.cue_point_service.add(cue_point)
-    timed_thumb_asset = KalturaTimedThumbAsset.new
+    timed_thumb_asset = KalturaTimedThumbAsset.new()
     timed_thumb_asset.cue_point_id = cue_res.id
     thumb_asset_res = client.thumb_asset_service.add(entry_id, timed_thumb_asset)
     puts thumb_asset_res.inspect
@@ -125,7 +125,7 @@ end
 imgs_dir = ARGV[3]
 entry_name = ARGV[4]
 
-config = KalturaConfiguration.new
+config = KalturaConfiguration.new()
 config.service_url = base_endpoint
 client = KalturaClient.new(config)
 client.ks = client.session_service.start(

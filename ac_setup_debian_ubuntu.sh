@@ -24,8 +24,8 @@ fi
 GECKODRIVER_VER=v0.21.0
 apt update
 apt install -y lsb-release software-properties-common
-DISTRO=$(lsb_release -s -i)
-CODENAME=$(lsb_release -c -s)
+DISTRO=`lsb_release -s -i`
+CODENAME=`lsb_release -c -s`
 if [ "$DISTRO" = 'Ubuntu' ]; then
     add-apt-repository "deb http://archive.canonical.com/ubuntu $CODENAME partner"
 fi

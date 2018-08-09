@@ -89,7 +89,7 @@ class Vconn1 < Test::Unit::TestCase
     basedir = File.dirname(__FILE__)
     @logger.info(basedir + '/get_ac_audio.sh ' + meeting_id)
     system basedir + '/get_ac_audio.sh ' + meeting_id
-    if ($CHILD_STATUS.exitstatus != 0) || !File.exist?(audio_file)
+    if ($?.exitstatus != 0) || !File.exist?(audio_file)
       @logger.error('Failed to obtain audio file :(')
       return false
     end
@@ -97,8 +97,8 @@ class Vconn1 < Test::Unit::TestCase
     # get duration from the MP3 file, we'll use that to determine how long ffmpeg should be recording for
     dur_sec, stdeerr, status = Open3.capture3(ffprobe_bin + ' -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' + audio_file.shellescape)
     dur_sec = dur_sec.delete!("\n")
-    unless status.success?
-      log.error('Failed to get audio track duration. Exited with ' + $CHILD_STATUS.exitstatus.to_s + ':(')
+    if !status.success?
+      log.error('Failed to get audio track duration. Exited with ' + $?.exitstatus.to_s + ':(')
       return false
     end
     # since AC takes forever to load the recording, add 2 minutes to the actual recording's duration, we'll cut the extra off later
@@ -114,22 +114,22 @@ class Vconn1 < Test::Unit::TestCase
 
     # FFmpeg magic
     # record X11's display
-    unless ffmpeg_x11_grab(ffmpeg_bin, resolution, frame_rate, x_display, extra_duration.to_s, recording_file)
+    if !ffmpeg_x11_grab(ffmpeg_bin, resolution, frame_rate, x_display, extra_duration.to_s, recording_file)
       return false
     end
 
     # use scene detector feature to determine when the recording had actually started
-    unless first_scene = ffmpeg_detect_scene_start_time(ffmpeg_bin, recording_file, 1)
+    if !first_scene = ffmpeg_detect_scene_start_time(ffmpeg_bin, recording_file, 1)
       return false
     end
 
     # trim original screen recording so that it starts from when AC actually started playing the recording
-    unless ffmpeg_trim_video(ffmpeg_bin, recording_file, first_scene, dur_sec.to_s, out_dir + meeting_id + '.final.mkv')
+    if !ffmpeg_trim_video(ffmpeg_bin, recording_file, first_scene, dur_sec.to_s, out_dir + meeting_id + '.final.mkv')
       return false
     end
 
     # merge video and audio files
-    unless ffmpeg_merge_vid_and_aud_tracks(ffmpeg_bin, out_dir + meeting_id + '.final.mkv', audio_file, full_recording_file)
+    if !ffmpeg_merge_vid_and_aud_tracks(ffmpeg_bin, out_dir + meeting_id + '.final.mkv', audio_file, full_recording_file)
       return false
     end
 
@@ -164,11 +164,11 @@ class Vconn1 < Test::Unit::TestCase
     @logger.info('X11grab COMMAND IS: ' + ffmpeg_x11grab_command)
 
     system ffmpeg_x11grab_command
-    if $CHILD_STATUS.exitstatus != 0
-      @logger.error('ffmpeg x11grab command exited with ' + $CHILD_STATUS.exitstatus.to_s + ':(')
+    if $?.exitstatus != 0
+      @logger.error('ffmpeg x11grab command exited with ' + $?.exitstatus.to_s + ':(')
       return false
     end
-    true
+    return true
   end
 
   def ffmpeg_detect_scene_start_time(ffmpeg_bin, recording_file, scene_number)
@@ -182,22 +182,22 @@ class Vconn1 < Test::Unit::TestCase
     end
     first_scene = first_scene.delete!("\n")
     first_scene = first_scene.to_f
-    unless first_scene.is_a? Numeric
+    if !first_scene.is_a? Numeric
       @logger.error('ffmpeg scene detection command came back with unexpected output: ' + first_scene + ' :(')
       return false
     end
-    first_scene
+    return first_scene
   end
 
   def ffmpeg_trim_video(ffmpeg_bin, recording_file, start_time, duration, output_file)
     ffmpeg_trim_command = ffmpeg_bin + ' -i ' + recording_file.shellescape + ' -ss ' + start_time.to_s + ' -t ' + duration.to_s + ' -c copy -strict -2 -an -y ' + output_file.shellescape
     @logger.info('Trim COMMAND IS: ' + ffmpeg_trim_command)
     system ffmpeg_trim_command
-    if $CHILD_STATUS.exitstatus != 0
-      @logger.error('ffmpeg trim command exited with ' + $CHILD_STATUS.exitstatus.to_s + ':(')
+    if $?.exitstatus != 0
+      @logger.error('ffmpeg trim command exited with ' + $?.exitstatus.to_s + ':(')
       return false
     end
-    true
+    return true
   end
 
   def ffmpeg_merge_vid_and_aud_tracks(ffmpeg_bin, vid_file, aud_file, output_file)
@@ -205,15 +205,15 @@ class Vconn1 < Test::Unit::TestCase
 
     @logger.info('Merge COMMAND IS: ' + ffmpeg_merge_command)
     system ffmpeg_merge_command
-    if $CHILD_STATUS.exitstatus != 0
-      @logger.error('ffmpeg audio and video merge command exited with ' + $CHILD_STATUS.exitstatus.to_s + ':(')
+    if $?.exitstatus != 0
+      @logger.error('ffmpeg audio and video merge command exited with ' + $?.exitstatus.to_s + ':(')
       return false
     end
-    true
+    return true
   end
 
   def init_client(base_endpoint, partner_id, secret)
-    config = KalturaConfiguration.new
+    config = KalturaConfiguration.new()
     config.service_url = base_endpoint
     client = KalturaClient.new(config)
     client.ks = client.session_service.start(
@@ -225,39 +225,43 @@ class Vconn1 < Test::Unit::TestCase
       'disableentitlement'
     )
 
-    client
+    return client
   end
 
   def get_or_create_metadata_profile_id(client, metadata_profile_sys_name)
-    metadata_profile_filter = KalturaMetadataProfileFilter.new
+    metadata_profile_filter = KalturaMetadataProfileFilter.new()
     metadata_profile_filter.system_name_equal = metadata_profile_sys_name
     response = client.metadata_profile_service.list(metadata_profile_filter)
 
-    return response.objects[0].id if response.total_count > 0
+    if response.total_count > 0
+      return response.objects[0].id
+    end
 
     # if this metadata profile does not exist - create it.
-    metadata_profile = KalturaMetadataProfile.new
+    metadata_profile = KalturaMetadataProfile.new()
     metadata_profile.name = 'Adobe Connect Migration'
     metadata_profile.system_name = metadata_profile_sys_name
     metadata_profile.metadata_object_type = Kaltura::KalturaMetadataObjectType::ENTRY
     xsd = File.read(File.dirname(__FILE__) + File::SEPARATOR + 'ac_migration.xsd')
 
     metadata_profile = client.metadata_profile_service.add(metadata_profile, xsd)
-    return metadata_profile.id if metadata_profile
+    if metadata_profile
+      return metadata_profile.id
+    end
 
-    false
+    return false
   end
 
   def create_category_association(client, parent_cat_id, full_cat_path, cat_name, entry_id)
     # check whether category already exists
-    filter = KalturaCategoryFilter.new
+    filter = KalturaCategoryFilter.new()
     filter.full_name_equal = full_cat_path + '>' + cat_name
-    pager = KalturaFilterPager.new
+    pager = KalturaFilterPager.new()
     results = client.category_service.list(filter, pager)
     ## if not, create it
     category_id = false
     if results.total_count == 0
-      category = KalturaCategory.new
+      category = KalturaCategory.new()
       category.parent_id = parent_cat_id
       category.name = cat_name
       begin
@@ -274,7 +278,7 @@ class Vconn1 < Test::Unit::TestCase
       category_id = results.objects[0].id
     end
 
-    category_entry = KalturaCategoryEntry.new
+    category_entry = KalturaCategoryEntry.new()
     category_entry.entry_id = entry_id
     category_entry.category_id = category_id
     begin
@@ -286,7 +290,7 @@ class Vconn1 < Test::Unit::TestCase
   end
 
   def ingest_to_kaltura(client, entry_name, meeting_id, sco_id, vid_file_path)
-    upload_token = KalturaUploadToken.new
+    upload_token = KalturaUploadToken.new()
 
     results = client.upload_token_service.add(upload_token)
     upload_token_id = results.id
@@ -297,15 +301,19 @@ class Vconn1 < Test::Unit::TestCase
     resume_at = -1
 
     results = client.upload_token_service.upload(upload_token_id, file_data, resume, final_chunk, resume_at)
-    entry = KalturaMediaEntry.new
+    entry = KalturaMediaEntry.new()
     entry.media_type = KalturaMediaType::VIDEO
     entry.name = entry_name
     entry.reference_id = sco_id
     entry.tags = meeting_id
 
-    entry.user_id = ENV['USER_ID'] if ENV['USER_ID']
+    if ENV['USER_ID']
+      entry.user_id = ENV['USER_ID']
+    end
 
-    entry.description = ENV['DESCRIPTION'] if ENV['DESCRIPTION']
+    if ENV['DESCRIPTION']
+      entry.description = ENV['DESCRIPTION']
+    end
 
     results = client.media_service.add(entry)
     entry_id = results.id
@@ -323,16 +331,16 @@ class Vconn1 < Test::Unit::TestCase
       end
     end
 
-    resource = KalturaUploadedFileTokenResource.new
+    resource = KalturaUploadedFileTokenResource.new()
     resource.token = upload_token_id
 
     results = client.media_service.add_content(entry_id, resource)
-    unless defined? results.id
+    if !defined? results.id
       @logger.error('media_service.add_content() failed:(')
       return false
     end
     @logger.info('Uploaded ' + vid_file_path + ', entry ID: ' + results.id)
-    results.id
+    return results.id
   end
 
   def element_present?(how, what)
@@ -359,9 +367,9 @@ class Vconn1 < Test::Unit::TestCase
     alert = @driver.switch_to.alert()
     alert_text = alert.text
     if @accept_next_alert
-      alert.accept
+      alert.accept()
     else
-      alert.dismiss
+      alert.dismiss()
     end
     alert_text
   ensure
