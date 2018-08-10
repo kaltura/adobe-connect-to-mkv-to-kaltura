@@ -90,7 +90,7 @@ class Vconn1 < Test::Unit::TestCase
     @logger.info(basedir + '/get_ac_audio.sh ' + meeting_id)
     system basedir + '/get_ac_audio.sh ' + meeting_id
     if ($?.exitstatus != 0) || !File.exist?(audio_file)
-      @logger.error('Failed to obtain audio file :(')
+      @logger.warn('Failed to obtain audio file :(')
       audio_track_exists = false
     end
 
@@ -100,6 +100,7 @@ class Vconn1 < Test::Unit::TestCase
       dur_sec = dur_sec.delete!("\n")
       if !status.success?
         log.error('Failed to get audio track duration. Exited with ' + $?.exitstatus.to_s + ':(')
+        return false
       end
     elsif duration
       dur_sec = duration.to_f
