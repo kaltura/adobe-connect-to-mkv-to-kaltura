@@ -106,7 +106,8 @@ class Vconn1 < Test::Unit::TestCase
 	    @logger.error("Failed to obtain audio file :(")
     end
 
-    # get duration from the MP3 file, we'll use that to determine how long ffmpeg should be recording for 
+    # get duration from the MP3 file, we'll use that to determine how long ffmpeg should be recording for
+     
     dur_sec, stdeerr, status = Open3.capture3(ffprobe_bin + " -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " + audio_file.shellescape)
     dur_sec=dur_sec.delete!("\n")
     if ! status.success?
@@ -281,10 +282,10 @@ class Vconn1 < Test::Unit::TestCase
         @logger.info("Created category: " + cat_name + ", cat ID: " + results.id.to_s)
         category_id = results.id
       rescue Kaltura::KalturaAPIError => e
-      	  @logger.error("Exception Class: #{ e.class.name }")
-      	  @logger.error("Exception Message: #{ e.message }")
-      	  # enable to get a BT
-      	  # @logger.info("Exception Message: #{ e.backtrace }")
+        @logger.error("Exception Class: #{ e.class.name }")
+      	@logger.error("Exception Message: #{ e.message }")
+      	# enable to get a BT
+      	# @logger.info("Exception Message: #{ e.backtrace }")
       end
     else
       category_id = results.objects[0].id
@@ -296,10 +297,10 @@ class Vconn1 < Test::Unit::TestCase
     begin
       response = client.category_entry_service.add(category_entry)
     rescue Kaltura::KalturaAPIError => e
-    	@logger.error("Exception Class: #{ e.class.name }")
-    	@logger.error("Exception Message: #{ e.message }")
-    	# enable to get a BT
-    	# @logger.info("Exception Message: #{ e.backtrace }")
+      @logger.error("Exception Class: #{ e.class.name }")
+      @logger.error("Exception Message: #{ e.message }")
+      # enable to get a BT
+      # @logger.info("Exception Message: #{ e.backtrace }")
     end
   end
 
