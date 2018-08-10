@@ -171,7 +171,7 @@ class Vconn1 < Test::Unit::TestCase
     # if it's ever fixed, we could drop that and start Firefox in full screen mode with:
     # @driver.manage.window.full_screen
     ffmpeg_x11grab_command = ffmpeg_bin + ' -s ' + resolution + ' -framerate ' + frame_rate.to_s + ' -f x11grab -i :' + x_display.to_s + ' -t ' + duration.to_s + ' -vf "crop=in_w:in_h-147" -y ' + recording_file.shellescape
-    @logger.info('X11grab COMMAND IS: ' + ffmpeg_x11grab_command)
+    @logger.info('X11grab command is: ' + ffmpeg_x11grab_command)
 
     system ffmpeg_x11grab_command
     if $?.exitstatus != 0
@@ -201,7 +201,7 @@ class Vconn1 < Test::Unit::TestCase
 
   def ffmpeg_trim_video(ffmpeg_bin, recording_file, start_time, duration, output_file)
     ffmpeg_trim_command=ffmpeg_bin + " -i " + recording_file.shellescape + " -ss " + start_time.to_s + " -t " + duration.to_s + " -c copy -strict -2 -an -y " + output_file.shellescape	
-    @logger.info("Trim command is: " + ffmpeg_trim_command)
+    @logger.info('Trim command is: ' + ffmpeg_trim_command)
     system ffmpeg_trim_command
     if $?.exitstatus != 0
       @logger.error('ffmpeg trim command exited with ' + $?.exitstatus.to_s + ':(')
@@ -213,7 +213,7 @@ class Vconn1 < Test::Unit::TestCase
   def ffmpeg_merge_vid_and_aud_tracks(ffmpeg_bin, vid_file, aud_file, output_file)
     ffmpeg_merge_command = ffmpeg_bin + ' -i ' + vid_file.shellescape + ' -i ' + aud_file.shellescape + ' -c copy -y ' + output_file.shellescape
 
-    @logger.info("Merge command is: " + ffmpeg_merge_command)
+    @logger.info('Merge command is: ' + ffmpeg_merge_command)
     system ffmpeg_merge_command
     if $?.exitstatus != 0
       @logger.error('ffmpeg audio and video merge command exited with ' + $?.exitstatus.to_s + ':(')
