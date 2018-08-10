@@ -101,7 +101,7 @@ static void findSquares(const Mat& image, vector<vector<Point> >& squares)
                     // vertices to resultant sequence
                     if(maxCosine < 0.3){
                         squares.push_back(approx);
-		    }
+                    }
                 }
             }
         }
@@ -115,8 +115,8 @@ static void createSlide(Mat& image, const char *slide_output_path,const vector<v
     vector<int> sortIdx(squares.size());
     vector<float> areas(squares.size());
     for(int n = 0; n < (int)squares.size(); n++) {
-	sortIdx[n] = n;
-	areas[n] = contourArea(squares[n], false);
+        sortIdx[n] = n;
+        areas[n] = contourArea(squares[n], false);
     }
 
     // sort contours so that the largest contours go first
@@ -137,21 +137,21 @@ int main(int argc, char** argv)
 {
 
     if (argc < 3){
-	cout<<"Usage: "<<argv[0]<<" </path/to/orig/image> </path/to/output/slide/img>\n";
-	return 1;
+        cout<<"Usage: "<<argv[0]<<" </path/to/orig/image> </path/to/output/slide/img>\n";
+        return 1;
     }
     const char *orig_img=argv[1];
     const char *slide_output_path=argv[2];
     int rect_elem_index=2;
     if (argv[3]){
-	rect_elem_index=atoi(argv[3]);
+        rect_elem_index=atoi(argv[3]);
     }
     vector<vector<Point> > squares;
 
     Mat image = imread(orig_img, 1);
     if(image.empty()){
-	cout << "Couldn't load " << orig_img << endl;
-	return 2;
+        cout << "Couldn't load " << orig_img << endl;
+    return 2;
     }
 
     findSquares(image, squares);

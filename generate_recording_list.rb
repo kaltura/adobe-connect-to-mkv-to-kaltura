@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
-require "adobe_connect"
-require "date"
-require "csv"
+require 'adobe_connect'
+require 'date'
+require 'csv'
 
 def output_data(connect,sco_id)
   response = connect.sco_info(sco_id: sco_id)
@@ -35,15 +35,27 @@ def output_data(connect,sco_id)
     line.push(owner_info.at_xpath('//owner-principal//email').text)
     line.push(owner_info.at_xpath('//owner-principal//login').text)
     line.push(owner_info.at_xpath('//owner-principal//name').text)
+
+    # Calculate the duration if available
+    if response.at_xpath('//sco/duration')
+      line.push(response.at_xpath('//sco/duration').text)
+    elsif response.at_xpath('//sco/date-begin') && response.at_xpath('//sco/date-end')
+      startTime = DateTime.parse(response.at_xpath('//sco/date-begin').text).to_time.to_i
+      endTime = DateTime.parse(response.at_xpath('//sco/date-end').text).to_time.to_i
+      duration = endTime - startTime
+      line.push(duration.to_s)
+    else
+      line.push('')
+    end
   end
   
   # format line into CSV string and print it out.
   csv_line_string = line.to_csv()
-  print csv_line_string     
+  print csv_line_string
 end
 
 if ARGV.length < 1
-  puts "Usage: " + __FILE__ + " </path/to/sco/list>"
+  puts 'Usage: ' + __FILE__ + ' </path/to/sco/list>'
   exit 1
 end
 
@@ -61,13 +73,12 @@ connect.log_in #=> true
 
 $user_mapping = nil
 if ENV['SCOID_USER_MAPPING'] && File.file?(ENV['SCOID_USER_MAPPING'])
-  #slurp file into array of arrays
+  # slurp file into array of arrays
   $user_mapping = CSV.read(ENV['SCOID_USER_MAPPING'])
 end
-  
-text=File.open(ARGV[0]).read
-text.gsub!(/\r\n?/, "")
-text.each_line do |line|
-  output_data(connect,line.delete!("\n"))
-end
 
+text = File.open(ARGV[0]).read
+text.gsub!(/\r\n?/, '')
+text.each_line do |line|
+  output_data(connect, line.delete!("\n"))
+end

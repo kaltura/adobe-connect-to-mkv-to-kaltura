@@ -10,14 +10,15 @@
 mkdir -p -- "$XVFB_LOCKDIR" || exit
 
 i=$XVFB_DISPLAY_MIN
-while (( i < XVFB_DISPLAY_MAX )); do
-  if [ -f "/tmp/.X${i}-lock" ]; then                # avoid an obvious open display
-    (( ++i )); continue
-  fi
-  exec 5>"$XVFB_LOCKDIR/$i" || continue           # open a lockfile
-  if flock -x -n 5; then                          # attempt lock
-    export X_SERVER_DISPLAY_NUM=$i		  # export selected display for use in subsequent scripts
-    exec xvfb-run --server-num="$i" "$@" || exit  # once locked, run xvfb-run on selected display 
-  fi
-  (( i++ ))
+while ((i < XVFB_DISPLAY_MAX)); do
+    if [ -f "/tmp/.X${i}-lock" ]; then # avoid an obvious open display
+        ((++i))
+        continue
+    fi
+    exec 5> "$XVFB_LOCKDIR/$i" || continue # open a lockfile
+    if flock -x -n 5; then # attempt lock
+        export X_SERVER_DISPLAY_NUM=$i               # export selected display for use in subsequent scripts
+        exec xvfb-run --server-num="$i" "$@" || exit # once locked, run xvfb-run on selected display
+    fi
+    ((i++))
 done
