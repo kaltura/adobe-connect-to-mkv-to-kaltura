@@ -3,28 +3,55 @@ require 'adobe_connect'
 require 'date'
 require 'csv'
 
-def output_data(connect, sco_id)
+def output_data(connect,sco_id)
   response = connect.sco_info(sco_id: sco_id)
   folder_id = response.at_xpath('//sco//@folder-id')
-  fresponse = connect.sco_info(sco_id: folder_id)
-  folder_name = fresponse.at_xpath('//sco//name').text
-  print sco_id + ',"' + folder_name.tr(',', '').tr('(', '').tr(')', '') + '","' + response.at_xpath('//sco//name').text.tr(',', '').tr('(', '').tr(')', '') + '",'
-  print response.at_xpath('//sco//description') ? '"' + response.at_xpath('//sco//description').text.tr(',', '').tr('(', '').tr(')', '') + '",' : ','
-  print response.at_xpath('//sco//url-path').text.tr('/', '') + ','
-  print DateTime.parse(response.at_xpath('//sco/date-created').text).to_time.to_i.to_s + ','
+  folder_response = connect.sco_info(sco_id: folder_id)
+  folder_name = folder_response.at_xpath('//sco//name').text
+  line = Array.new()
+  line.push(sco_id)
+  line.push(folder_name.tr(',', '').tr('(','').tr(')',''))
+  line.push(response.at_xpath('//sco//name').text.tr(',', '').tr('(','').tr(')',''))
+  # if the recording has a description available through the API- add it to the CSV
+  if response.at_xpath('//sco//description')
+    line.push(response.at_xpath('//sco//description').text.tr(',', '').tr('(','').tr(')',''))
+  else
+    # we want to maintain the same amount of values in each line array
+    line.push('')
+  end
+  
+  line.push(response.at_xpath('//sco//url-path').text.tr('/', ''))
+  line.push(DateTime.parse(response.at_xpath('//sco/date-created').text).to_time.to_i.to_s)
+  
   if $user_mapping
     for row in $user_mapping do
       if row[0] == sco_id
-        print row[1]
-      end
+        line.push(row[1])
+      end 
     end
-  else
+  else 
     url_path = response.at_xpath('//sco//url-path').text.tr('/', '')
     owner_info = connect.sco_by_url(url_path: url_path)
-    owner_id = owner_info.at_xpath('//owner-principal//login').text
-    print owner_id
+    line.push(owner_info.at_xpath('//owner-principal//email').text)
+    line.push(owner_info.at_xpath('//owner-principal//login').text)
+    line.push(owner_info.at_xpath('//owner-principal//name').text)
+
+    # Calculate the duration if available
+    if response.at_xpath('//sco/duration')
+      line.push(response.at_xpath('//sco/duration').text)
+    elsif response.at_xpath('//sco/date-begin') && response.at_xpath('//sco/date-end')
+      startTime = DateTime.parse(response.at_xpath('//sco/date-begin').text).to_time.to_i
+      endTime = DateTime.parse(response.at_xpath('//sco/date-end').text).to_time.to_i
+      duration = endTime - startTime
+      line.push(duration.to_s)
+    else
+      line.push('')
+    end
   end
-  print "\n"
+  
+  # format line into CSV string and print it out.
+  csv_line_string = line.to_csv()
+  print csv_line_string
 end
 
 if ARGV.length < 1

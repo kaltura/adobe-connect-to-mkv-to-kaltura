@@ -74,10 +74,9 @@ class Vconn1 < Test::Unit::TestCase
     cat_name = ENV['CATEGORY_NAME']
     ac_username = ENV['AC_USERNAME']
     ac_passwd = ENV['AC_PASSWD']
+    duration = ENV['DURATION']
     x_display = ENV['X_SERVER_DISPLAY_NUM']
-
     ffmpeg_bin = ENV['FFMPEG_BIN'] || 'ffmpeg'
-
     ffprobe_bin = ENV['FFPROBE_BIN'] || 'ffprobe'
 
     resolution = '1280x720'
@@ -86,21 +85,30 @@ class Vconn1 < Test::Unit::TestCase
     recording_file = out_dir + meeting_id + '.mkv'
     full_recording_file = out_dir + meeting_id + '.full.mkv'
 
+    audio_track_exists = true
     basedir = File.dirname(__FILE__)
     @logger.info(basedir + '/get_ac_audio.sh ' + meeting_id)
     system basedir + '/get_ac_audio.sh ' + meeting_id
     if ($?.exitstatus != 0) || !File.exist?(audio_file)
-      @logger.error('Failed to obtain audio file :(')
+      @logger.warn('Failed to obtain audio file :(')
+      audio_track_exists = false
+    end
+
+    if audio_track_exists
+      # get duration from the MP3 file, we'll use that to determine how long ffmpeg should be recording for
+      dur_sec, stdeerr, status = Open3.capture3(ffprobe_bin + ' -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' + audio_file.shellescape)
+      dur_sec = dur_sec.delete!("\n")
+      if !status.success?
+        log.error('Failed to get audio track duration. Exited with ' + $?.exitstatus.to_s + ':(')
+        return false
+      end
+    elsif duration
+      dur_sec = duration.to_f
+    else
+      log.error('Failed to get duration from audio track or XML metadata :(')
       return false
     end
 
-    # get duration from the MP3 file, we'll use that to determine how long ffmpeg should be recording for
-    dur_sec, stdeerr, status = Open3.capture3(ffprobe_bin + ' -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' + audio_file.shellescape)
-    dur_sec = dur_sec.delete!("\n")
-    if !status.success?
-      log.error('Failed to get audio track duration. Exited with ' + $?.exitstatus.to_s + ':(')
-      return false
-    end
     # since AC takes forever to load the recording, add 2 minutes to the actual recording's duration, we'll cut the extra off later
     extra_duration = dur_sec.to_f + 120
 
@@ -129,14 +137,16 @@ class Vconn1 < Test::Unit::TestCase
     end
 
     # merge video and audio files
-    if !ffmpeg_merge_vid_and_aud_tracks(ffmpeg_bin, out_dir + meeting_id + '.final.mkv', audio_file, full_recording_file)
+    if audio_track_exists && !ffmpeg_merge_vid_and_aud_tracks(ffmpeg_bin, out_dir + meeting_id + '.final.mkv', audio_file, full_recording_file)
       return false
+    elsif !audio_track_exists
+      FileUtils.cp(out_dir + meeting_id + '.final.mkv', full_recording_file)
     end
 
     if File.exist?(full_recording_file)
       @logger.info('Final output saved to: ' + full_recording_file + ' :)')
     else
-      @logger.error("Something failed and I couldn't find a " + full_recording_file + ' to process:(')
+      @logger.error("Something failed and I couldn't find a " + full_recording_file + ' to process :(')
       return false
     end
 
@@ -161,7 +171,7 @@ class Vconn1 < Test::Unit::TestCase
     # if it's ever fixed, we could drop that and start Firefox in full screen mode with:
     # @driver.manage.window.full_screen
     ffmpeg_x11grab_command = ffmpeg_bin + ' -s ' + resolution + ' -framerate ' + frame_rate.to_s + ' -f x11grab -i :' + x_display.to_s + ' -t ' + duration.to_s + ' -vf "crop=in_w:in_h-147" -y ' + recording_file.shellescape
-    @logger.info('X11grab COMMAND IS: ' + ffmpeg_x11grab_command)
+    @logger.info('X11grab command is: ' + ffmpeg_x11grab_command)
 
     system ffmpeg_x11grab_command
     if $?.exitstatus != 0
@@ -171,9 +181,9 @@ class Vconn1 < Test::Unit::TestCase
     return true
   end
 
-  def ffmpeg_detect_scene_start_time(ffmpeg_bin, recording_file, scene_number)
-    ffmpeg_scene_command = ffmpeg_bin + ' -i ' + recording_file.shellescape + " -filter:v \"select='gt(scene,0.3)',showinfo\"  -frames:v " + scene_number.to_s + " -f null  - 2>&1|grep pts_time|sed 's/.*pts_time:\\([0-9.]*\\).*/\\1/'"
-    @logger.info('scene COMMAND IS: ' + ffmpeg_scene_command)
+  def ffmpeg_detect_scene_start_time(ffmpeg_bin,recording_file,scene_number)
+    ffmpeg_scene_command=ffmpeg_bin + " -i " + recording_file.shellescape + " -filter:v \"select='gt(scene,0.3)',showinfo\"  -frames:v " + scene_number.to_s + " -f null  - 2>&1|grep pts_time|sed 's/.*pts_time:\\([0-9.]*\\).*/\\1/'"
+    @logger.info('Scene command is: ' + ffmpeg_scene_command)
     first_scene, stdeerr, status = Open3.capture3(ffmpeg_scene_command)
     # because of our sed here, status.success? will always be true so need to insepct the value further.
     if first_scene.empty?
@@ -190,8 +200,8 @@ class Vconn1 < Test::Unit::TestCase
   end
 
   def ffmpeg_trim_video(ffmpeg_bin, recording_file, start_time, duration, output_file)
-    ffmpeg_trim_command = ffmpeg_bin + ' -i ' + recording_file.shellescape + ' -ss ' + start_time.to_s + ' -t ' + duration.to_s + ' -c copy -strict -2 -an -y ' + output_file.shellescape
-    @logger.info('Trim COMMAND IS: ' + ffmpeg_trim_command)
+    ffmpeg_trim_command=ffmpeg_bin + " -i " + recording_file.shellescape + " -ss " + start_time.to_s + " -t " + duration.to_s + " -c copy -strict -2 -an -y " + output_file.shellescape	
+    @logger.info('Trim command is: ' + ffmpeg_trim_command)
     system ffmpeg_trim_command
     if $?.exitstatus != 0
       @logger.error('ffmpeg trim command exited with ' + $?.exitstatus.to_s + ':(')
@@ -203,7 +213,7 @@ class Vconn1 < Test::Unit::TestCase
   def ffmpeg_merge_vid_and_aud_tracks(ffmpeg_bin, vid_file, aud_file, output_file)
     ffmpeg_merge_command = ffmpeg_bin + ' -i ' + vid_file.shellescape + ' -i ' + aud_file.shellescape + ' -c copy -y ' + output_file.shellescape
 
-    @logger.info('Merge COMMAND IS: ' + ffmpeg_merge_command)
+    @logger.info('Merge command is: ' + ffmpeg_merge_command)
     system ffmpeg_merge_command
     if $?.exitstatus != 0
       @logger.error('ffmpeg audio and video merge command exited with ' + $?.exitstatus.to_s + ':(')
@@ -317,7 +327,16 @@ class Vconn1 < Test::Unit::TestCase
 
     results = client.media_service.add(entry)
     entry_id = results.id
+    
+    resource = KalturaUploadedFileTokenResource.new()
+    resource.token = upload_token_id
 
+    results = client.media_service.add_content(entry_id, resource)
+    if !defined? results.id
+      @logger.error("media_service.add_content() failed:(")
+      return false
+    end
+    @logger.info("Uploaded " + vid_file_path + ", entry ID: " + results.id)
     if ENV['KALTURA_ROOT_CATEGORY_ID'] && ENV['KALTURA_ROOT_CATEGORY_PATH']
       create_category_association(client, ENV['KALTURA_ROOT_CATEGORY_ID'], ENV['KALTURA_ROOT_CATEGORY_PATH'], ENV['CATEGORY_NAME'], entry_id)
     end
@@ -326,20 +345,19 @@ class Vconn1 < Test::Unit::TestCase
       # retrieve metadata profile ID
       metadata_profile_id = get_or_create_metadata_profile_id(client, ENV['KALTURA_METADATA_SYSTEM_NAME'])
       if metadata_profile_id
-        metadata = format(ENV['KALTURA_METADATA_XML'], orig_created_at: ENV['ORIG_CREATED_AT'])
-        client.metadata_service.add(metadata_profile_id, Kaltura::KalturaMetadataObjectType::ENTRY, entry_id, metadata)
+        metadata = sprintf(ENV['KALTURA_METADATA_XML'], {:orig_created_at => ENV['ORIG_CREATED_AT']})
+        begin
+          client.metadata_service.add(metadata_profile_id, Kaltura::KalturaMetadataObjectType::ENTRY, entry_id, metadata)
+        rescue Kaltura::KalturaAPIError => e
+          @logger.error("Error occurred creating orig_created_at custom metadata for entry #{entry_id}")
+      	  @logger.error("Exception Class: #{ e.class.name }")
+      	  @logger.error("Exception Message: #{ e.message }")
+      	  # enable to get a BT
+      	  # @logger.info("Exception Message: #{ e.backtrace }")
+        end
       end
     end
 
-    resource = KalturaUploadedFileTokenResource.new()
-    resource.token = upload_token_id
-
-    results = client.media_service.add_content(entry_id, resource)
-    if !defined? results.id
-      @logger.error('media_service.add_content() failed:(')
-      return false
-    end
-    @logger.info('Uploaded ' + vid_file_path + ', entry ID: ' + results.id)
     return results.id
   end
 
