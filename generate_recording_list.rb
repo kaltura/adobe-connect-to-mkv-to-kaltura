@@ -23,30 +23,39 @@ def output_data(connect,sco_id)
   line.push(response.at_xpath('//sco//url-path').text.tr('/', ''))
   line.push(DateTime.parse(response.at_xpath('//sco/date-created').text).to_time.to_i.to_s)
   
+  found_user = false
   if $user_mapping
     for row in $user_mapping do
       if row[0] == sco_id
-        line.push(row[1])
+        line.push(row[1], '', '')
+        found_user = true
+        break
       end 
     end
-  else 
+  else
     url_path = response.at_xpath('//sco//url-path').text.tr('/', '')
     owner_info = connect.sco_by_url(url_path: url_path)
-    line.push(owner_info.at_xpath('//owner-principal//email').text)
-    line.push(owner_info.at_xpath('//owner-principal//login').text)
-    line.push(owner_info.at_xpath('//owner-principal//name').text)
-
-    # Calculate the duration if available
-    if response.at_xpath('//sco/duration')
-      line.push(response.at_xpath('//sco/duration').text)
-    elsif response.at_xpath('//sco/date-begin') && response.at_xpath('//sco/date-end')
-      startTime = DateTime.parse(response.at_xpath('//sco/date-begin').text).to_time.to_i
-      endTime = DateTime.parse(response.at_xpath('//sco/date-end').text).to_time.to_i
-      duration = endTime - startTime
-      line.push(duration.to_s)
-    else
-      line.push('')
+    if owner_info.at_xpath('//owner-principal')
+        found_user = true
+        line.push(owner_info.at_xpath('//owner-principal//email') ? owner_info.at_xpath('//owner-principal//email').text : '')
+        line.push(owner_info.at_xpath('//owner-principal//login') ? owner_info.at_xpath('//owner-principal//login').text : '')
+        line.push(owner_info.at_xpath('//owner-principal//name') ? owner_info.at_xpath('//owner-principal//name').text : '')
     end
+  end
+  if !found_user
+    line.push('','','')
+  end
+
+  # Calculate the duration if available
+  if response.at_xpath('//sco/duration')
+    line.push(response.at_xpath('//sco/duration').text)
+  elsif response.at_xpath('//sco/date-begin') && response.at_xpath('//sco/date-end')
+    startTime = DateTime.parse(response.at_xpath('//sco/date-begin').text).to_time.to_i
+    endTime = DateTime.parse(response.at_xpath('//sco/date-end').text).to_time.to_i
+    duration = endTime - startTime
+    line.push(duration.to_s)
+  else
+    line.push('')
   end
   
   # format line into CSV string and print it out.
