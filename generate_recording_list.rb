@@ -36,10 +36,10 @@ def output_data(connect,sco_id)
     url_path = response.at_xpath('//sco//url-path').text.tr('/', '')
     owner_info = connect.sco_by_url(url_path: url_path)
     if owner_info.at_xpath('//owner-principal')
-        found_user = true
-        line.push(owner_info.at_xpath('//owner-principal//email') ? owner_info.at_xpath('//owner-principal//email').text : '')
-        line.push(owner_info.at_xpath('//owner-principal//login') ? owner_info.at_xpath('//owner-principal//login').text : '')
-        line.push(owner_info.at_xpath('//owner-principal//name') ? owner_info.at_xpath('//owner-principal//name').text : '')
+      found_user = true
+      line.push(owner_info.at_xpath('//owner-principal//email') ? owner_info.at_xpath('//owner-principal//email').text : '')
+      line.push(owner_info.at_xpath('//owner-principal//login') ? owner_info.at_xpath('//owner-principal//login').text : '')
+      line.push(owner_info.at_xpath('//owner-principal//name') ? owner_info.at_xpath('//owner-principal//name').text : '')
     end
   end
   if !found_user
