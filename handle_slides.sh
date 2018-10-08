@@ -7,7 +7,7 @@ BASEDIR=`dirname $0`
 MEETING_ID=$1
 ENTRY_NAME=$2
 echo "1.000000" > $OUTDIR/imgs/scenes3_$MEETING_ID
-ffprobe -show_frames -of compact=p=0 -f lavfi "movie=/tmp/ac_shit/$MEETING_ID.final.mkv,select=gt(scene\,0.03) " | sed -r 's/.*pkt_pts_time=([0-9.]{8,})\|.*/\1/' >> $OUTDIR/imgs/scenes3_$MEETING_ID
+ffprobe -show_frames -of compact=p=0 -f lavfi "movie=$OUTDIR/$MEETING_ID.final.mkv,select=gt(scene\,0.03) " | sed -r 's/.*pkt_pts_time=([0-9.]{8,})\|.*/\1/' >> $OUTDIR/imgs/scenes3_$MEETING_ID
 rm -rf $OUTDIR/imgs/$MEETING_ID $OUTDIR/slides/$MEETING_ID
 mkdir -p $OUTDIR/imgs/$MEETING_ID $OUTDIR/slides/$MEETING_ID
 I=0
