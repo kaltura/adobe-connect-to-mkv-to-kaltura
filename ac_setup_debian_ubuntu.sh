@@ -2,9 +2,9 @@
 #===============================================================================
 #          FILE: ac_setup_debian_ubuntu.sh
 #         USAGE: ./ac_setup_debian_ubuntu.sh
-#   DESCRIPTION: Install all needed deps for running the code on Debian/Ubuntu 64bit
-#       OPTIONS: ---
-#  REQUIREMENTS: ---
+#   DESCRIPTION: Installs all needed deps for running the code on Debian/Ubuntu 64bit
+#       OPTIONS: Path to base dir as optional first arg [default is /opt]
+#  REQUIREMENTS: A modern version of Debian/Ubuntu [tested with Ubuntu 16.04]
 #          BUGS: ---
 #         NOTES: ---
 #        AUTHOR: Jess Portnoy <jess.portnoy@kaltura.com>
