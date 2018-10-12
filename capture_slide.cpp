@@ -1,3 +1,4 @@
+// To compile:
 // g++ capture_slide.cpp -lopencv_core -lopencv_imgproc -lopencv_objdetect -lopencv_highgui -o /tmp/capture_slide
 // g++ capture_slide.cpp -lopencv_core -lopencv_imgproc -lopencv_objdetect -lopencv_highgui -lopencv_imgcodecs 
 
@@ -97,7 +98,7 @@ static void findSquares(const Mat& image, vector<vector<Point> >& squares)
                     }
 
                     // if cosines of all angles are small
-                    // (all angles are ~90 degree) then write quandrange
+                    // (all angles are ~90 degree) then write quadrangle
                     // vertices to resultant sequence
                     if(maxCosine < 0.3){
                         squares.push_back(approx);
@@ -109,7 +110,7 @@ static void findSquares(const Mat& image, vector<vector<Point> >& squares)
 }
 
 
-// the function finds the rect_elem_index biggest rect area in the image [the slide POD] and generates a new image out of it
+// the function finds the rect_elem_index biggest rectangular area in the image [the slide POD] and generates a new image out of it
 static void createSlide(Mat& image, const char *slide_output_path,const vector<vector<Point> >& squares, int rect_elem_index)
 {
     vector<int> sortIdx(squares.size());
