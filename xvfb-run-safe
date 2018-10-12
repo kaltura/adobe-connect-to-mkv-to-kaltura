@@ -1,4 +1,10 @@
 #!/bin/bash
+
+if [ ! -x "`which xvfb-run 2> /dev/null`" ]; then
+    echo "Need to install xvfb-run."
+    exit 1
+fi
+
 # allow settings to be overridden via ENV vars
 : "${XVFB_LOCKDIR:=$HOME/.xvfb-locks}"
 : "${XVFB_DISPLAY_MIN:=99}"
@@ -7,7 +13,7 @@
 # assuming only one user will be using this, place the locks in the home directory
 # to avoid vulnerability to symlink attacks.
 # if multiple users are to make use of this wrapper concurrently, you should write to /tmp instead
-mkdir -p -- "$XVFB_LOCKDIR" || exit
+mkdir -p -- "$XVFB_LOCKDIR" || exit 2
 
 i=$XVFB_DISPLAY_MIN
 while ((i < XVFB_DISPLAY_MAX)); do
