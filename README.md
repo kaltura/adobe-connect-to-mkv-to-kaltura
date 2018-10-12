@@ -9,7 +9,7 @@ This code generates MKV files out of AC recordings and ingests them onto Kaltura
 - Download the ZIP archive and concat the audio FLVs into one MP3 using FFmpeg
 - Using Selenium and Mozilla's Geckodriver, launch Firefox with Xvfb and navigate to the recording's URL so that it plays using the Adobe SWF
 - Use FFmpeg's x11grab option to capture the screen display
-- Once done, use FFmpeg's scene detection feature to determine when the recording had actually started [this is needed because the AC app takes a long time to load and there's no other way to determine how long it actually took]
+- Once done, use FFmpeg's scene detection feature to determine when the recording had actually started [this is needed because the AC app takes a long time to load and there's no other way to ascertain how long it actually took]
 - Merge the audio and video files and use the Kaltura API to ingest the resulting file
 
 ## Pre-requisites
@@ -83,7 +83,7 @@ SCO-ID,SCO-FOLDER-NAME,SCO-NAME,PATH-URL
 To generate a list of recordings to process, run:
 
 ```sh
-$ ./generate_recording_list.rb /path/to/sco/ids/file > /path/to/asset/list/csv
+$ ./generate_recording_list.rb </path/to/sco/ids/file> > /path/to/asset/list/csv
 ```
 
 ### Parallel processing
@@ -113,9 +113,9 @@ Where `$RECORDING_ID` is the relative path for the given recording; i.e: `//sco/
 If the `KALTURA_.*` ENV vars are set, `$OUTDIR/$RECORDING_ID.full.mkv` will then be uploaded to Kaltura.
 Full logs are written to `/tmp/ac_$RECORDING_ID.log`. If there's a problem, start by looking there.
 
-If the `KALTURA_METADATA_SYSTEM_NAME` and `KALTURA_METADATA_XML` ENV vars are set, the original creation date of the Adobe Connect recording will be saved as a custom metadata field for the entry. If a metadata profile with system name KALTURA_METADATA_SYSTEM_NAME does not exist, it will be created by the script.
+If the `KALTURA_METADATA_SYSTEM_NAME` and `KALTURA_METADATA_XML` ENV vars are set, the original creation date of the Adobe Connect recording will be saved as a custom metadata field for the entry. If a metadata profile with system name `KALTURA_METADATA_SYSTEM_NAME` does not exist, it will be created by the script.
 
-If the `SCOID_USER_MAPPING` ENV var is set, the generate_recording_list.rb script will use this mapping file to map SCO IDs to new content owners. If the ENV var is not set, the script will default to using the data returned by the Adobe Connect API to set the content owners.
+If the `SCOID_USER_MAPPING` ENV var is set, the `generate_recording_list.rb` script will use this mapping file to map SCO IDs to new content owners. If the ENV var is not set, the script will default to using the data returned by the Adobe Connect API to set the content owners.
 
 ## Contributing
 
