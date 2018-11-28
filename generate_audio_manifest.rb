@@ -1,19 +1,19 @@
 #!/usr/bin/ruby
 require 'nokogiri'
+
 def get_audio_start_time (file_path)
     dir = File.dirname(file_path) + File::SEPARATOR + 'tmp'
     base_filename = File.basename(file_path, ".*")
-    master_xml = '';
-    xpath = '';
+    master_xml = ''
+    xpath = ".//Message[Method/text()='playEvent' and String[contains(text(), '#{base_filename}')]]/@time"
+
     if (base_filename.start_with?("cameraVoip"))
         master_xml_pattern = File.join(dir, 'mainstream.xml')
         xpath = ".//Message[Method/text()='playEvent' and String/text()='streamAdded' and Array/Object/streamName[contains(text(), '#{base_filename}')]]/Array/Object/startTime"
     elsif (base_filename.start_with?("ftvoice"))
         master_xml_pattern = File.join(dir, 'ftvoice*.xml')
-        xpath = ".//Message[Method/text()='playEvent' and String[contains(text(), '#{base_filename}')]]/@time"
     elsif (base_filename.start_with?("ftstage"))
         master_xml_pattern = File.join(dir,'ftstage*.xml')
-        xpath = ".//Message[Method/text()='playEvent' and String[contains(text(), '#{base_filename}')]]/@time"
     end
 
     files = Dir.glob(master_xml_pattern)
