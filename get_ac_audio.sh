@@ -75,7 +75,7 @@ done
 
 if [ -s $ID.list ]; then
     echo "ERR: No audio files found. Exiting."
-    exit 2
+    exit 3
 fir
 
 FILTER_COMPLEX=`$BASEDIR/generate_audio_manifest.rb $ID.list`
@@ -84,8 +84,13 @@ ID_LIST=`sed 's@^@-i @g' $ID.list | xargs`
 OUTPUT_FILE="$OUTDIR/$ID.mp3"
 $FFMPEG_BIN -nostdin $ID_LIST -filter_complex "$FILTER_COMPLEX" -y $OUTPUT_FILE
 if [ ! -r $OUTPUT_FILE ]; then
-    echo "ERR: Failed to generate $OUTPUT_FILE."
-    exit 3
+    echo "ERR: Failed to generate $OUTPUT_FILE. Exiting."
+    exit 4
+fi
+
+if ! $FFPROBE_BIN -v error -show_entries stream=codec_type $OUTPUT_FILE | grep -m1 -q audio; then
+    echo "ERR: Failed to detect audio on $OUTPUT_FILE. Exiting."
+    exit 5
 fi
 
 echo "Final output saved to $OUTPUT_FILE"
