@@ -52,7 +52,7 @@ else
 fi
 
 if [ -z "$VOIP" ]; then
-    echo "$ID.zip contains no cameraVoip*.flv/cameraVoip*.mp4/ftvoice*.flv/ftstage*.flv files. Exiting:("
+    echo "ERR: $ID.zip contains no cameraVoip*.flv/cameraVoip*.mp4/ftvoice*.flv/ftstage*.flv files. Exiting:("
     exit 2
 fi
 
@@ -73,13 +73,18 @@ for i in "${!VOIP[@]}"; do
     fi
 done
 
+if [ -s $ID.list ]; then
+    echo "ERR: No audio files found. Exiting."
+    exit 2
+fir
+
 FILTER_COMPLEX=`$BASEDIR/generate_audio_manifest.rb $ID.list`
 ID_LIST=`sed 's@^@-i @g' $ID.list | xargs`
 
 OUTPUT_FILE="$OUTDIR/$ID.mp3"
 $FFMPEG_BIN -nostdin $ID_LIST -filter_complex "$FILTER_COMPLEX" -y $OUTPUT_FILE
 if [ ! -r $OUTPUT_FILE ]; then
-    echo "Failed to generate $OUTPUT_FILE."
+    echo "ERR: Failed to generate $OUTPUT_FILE."
     exit 3
 fi
 
