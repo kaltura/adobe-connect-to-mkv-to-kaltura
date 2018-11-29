@@ -73,10 +73,10 @@ for i in "${!VOIP[@]}"; do
     fi
 done
 
-if [ -s $ID.list ]; then
+if [ ! -s $ID.list ]; then
     echo "ERR: No audio files found. Exiting."
     exit 3
-fir
+fi
 
 FILTER_COMPLEX=`$BASEDIR/generate_audio_manifest.rb $ID.list`
 ID_LIST=`sed 's@^@-i @g' $ID.list | xargs`
