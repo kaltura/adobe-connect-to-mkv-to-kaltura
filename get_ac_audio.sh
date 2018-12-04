@@ -81,7 +81,6 @@ fi
 FILTER_COMPLEX=`$BASEDIR/generate_audio_manifest.rb $ID.list`
 ID_LIST=`sed 's@^@-i @g' $ID.list | xargs`
 
-OUTPUT_FILE="$OUTDIR/$ID.mp3"
 $FFMPEG_BIN -nostdin $ID_LIST -filter_complex "$FILTER_COMPLEX" -y $OUTPUT_FILE
 if [ ! -r $OUTPUT_FILE ]; then
     echo "ERR: Failed to generate $OUTPUT_FILE. Exiting."
@@ -91,6 +90,25 @@ fi
 if ! $FFPROBE_BIN -v error -show_entries stream=codec_type $OUTPUT_FILE | grep -m1 -q audio; then
     echo "ERR: Failed to detect audio on $OUTPUT_FILE. Exiting."
     exit 5
+fi
+
+EDIT_XML="$TMP/edit.xml"
+if [ -r $EDIT_XML ]; then
+    FILTER_COMPLEX=`$BASEDIR/generate_edit_manifest.rb $EDIT_XML`
+    EDITED_OUTPUT_FILE="$OUTDIR/$ID.edited.mp3"
+
+    $FFMPEG_BIN -nostdin -i $OUTPUT_FILE -filter_complex "$FILTER_COMPLEX" -map [outa] -y $EDITED_OUTPUT_FILE
+    if [ ! -r $EDITED_OUTPUT_FILE ]; then
+        echo "ERR: Failed to generate $EDITED_OUTPUT_FILE. Exiting."
+        exit 6
+    fi
+
+    if ! $FFPROBE_BIN -v error -show_entries stream=codec_type $EDITED_OUTPUT_FILE | grep -m1 -q audio; then
+        echo "ERR: Failed to detect audio on $EDITED_OUTPUT_FILE. Exiting."
+        exit 7
+    fi
+
+    mv -f $EDITED_OUTPUT_FILE $OUTPUT_FILE
 fi
 
 echo "Final output saved to $OUTPUT_FILE"
