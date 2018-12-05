@@ -68,6 +68,11 @@ if ARGV.length < 1
   exit 1
 end
 
+if (!File.exist?(ARGV[0]))
+    puts 'File ' + ARGV[0] + ' does not exist.'
+    exit 1
+end
+
 # start by configuring it with a username, password, and domain.
 AdobeConnect::Config.declare do
   username ENV['AC_USERNAME']
