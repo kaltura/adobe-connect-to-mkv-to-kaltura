@@ -95,17 +95,20 @@ fi
 EDIT_XML="$TMP/edit.xml"
 if [ -r $EDIT_XML ]; then
     FILTER_COMPLEX=`$BASEDIR/generate_edit_manifest.rb $EDIT_XML`
+    if [ -z "$FILTER_COMPLEX" ]; then
+       echo "ERR: Failed to generate filter_complex"
+       exit 6
+    fi
     EDITED_OUTPUT_FILE="$OUTDIR/$ID.edited.mp3"
-
     $FFMPEG_BIN -nostdin -i $OUTPUT_FILE -filter_complex "$FILTER_COMPLEX" -map [outa] -y $EDITED_OUTPUT_FILE
     if [ ! -r $EDITED_OUTPUT_FILE ]; then
         echo "ERR: Failed to generate $EDITED_OUTPUT_FILE. Exiting."
-        exit 6
+        exit 7
     fi
 
     if ! $FFPROBE_BIN -v error -show_entries stream=codec_type $EDITED_OUTPUT_FILE | grep -m1 -q audio; then
         echo "ERR: Failed to detect audio on $EDITED_OUTPUT_FILE. Exiting."
-        exit 7
+        exit 8
     fi
 
     mv -f $EDITED_OUTPUT_FILE $OUTPUT_FILE

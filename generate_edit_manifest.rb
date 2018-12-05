@@ -20,7 +20,13 @@ def get_edit_points_array (edit_xml_path)
     return edit_points_array
 end
 
-edit_points_array = get_edit_points_array(ARGV[0])
+
+edit_file = ARGV[0]
+if (!File.exist?(edit_file))
+    exit 1;
+end
+
+edit_points_array = get_edit_points_array(edit_file)
 
 filter_complex = ''
 start_point = 0
@@ -40,5 +46,5 @@ end
 
 final = edit_points_array.length
 parts.push("[a#{final}]")
-filter_complex += "[0:a]atrim=start=#{start_point}[a#{final}];" + parts.join('') + 'concat=v=0:a=1[outa]'
+filter_complex += "[0:a]atrim=start=#{start_point}[a#{final}];" + parts.join('') + 'concat=n=' + parts.length.to_s + ':v=0:a=1[outa]'
 puts filter_complex
