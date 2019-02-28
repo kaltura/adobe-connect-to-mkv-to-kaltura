@@ -14,6 +14,10 @@ for UTIL in pidof xvfb-run xvfb-run-safe curl unzip dos2unix; do
         exit 2
     fi
 done
+if ! pulseaudio --check;then 
+	Xvfb :1 -screen 0 1280x720x24 &
+	DISPLAY=:1 pulseaudio --start --disallow-exit -vvv --log-target=newfile:"/var/tmp/mypulseaudio.log"
+fi
 
 BASEDIR=`dirname $0`
 ASSET_LIST_FILE=$1
@@ -41,5 +45,5 @@ while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORI
     	    echo "I'll nap till I find my audio sink for $MEETING_ID"
     	    sleep 2
     done
-    $BASEDIR/capture_audio.sh $MEETING_ID
+    bash -x $BASEDIR/capture_audio.sh $MEETING_ID
 done 3< $ASSET_LIST_FILE
