@@ -14,10 +14,10 @@ for UTIL in pidof xvfb-run xvfb-run-safe curl unzip dos2unix; do
         exit 2
     fi
 done
-if ! pulseaudio --check;then 
-	Xvfb :1 -screen 0 1280x720x24 &
-	DISPLAY=:1 pulseaudio --start --disallow-exit -vvv --log-target=newfile:"/var/tmp/mypulseaudio.log"
-fi
+#if ! pulseaudio --check;then 
+#	Xvfb :1 -screen 0 1280x720x24 &
+#	DISPLAY=:1 pulseaudio --start --disallow-exit -vvv --log-target=newfile:"/var/tmp/mypulseaudio.log"
+#fi
 
 BASEDIR=`dirname $0`
 ASSET_LIST_FILE=$1
