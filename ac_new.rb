@@ -40,7 +40,7 @@ class Vconn1 < Test::Unit::TestCase
     @base_url = ENV['AC_ENDPOINT']
     @driver = Selenium::WebDriver.for :firefox, desired_capabilities: @caps
     @driver.manage.window.maximize
-    # @driver.manage.window.full_screen
+    #@driver.manage.window.full_screen
 
     @accept_next_alert = true
     @driver.manage.timeouts.implicit_wait = 30
@@ -83,7 +83,6 @@ class Vconn1 < Test::Unit::TestCase
     frame_rate = '30'
     audio_file = out_dir + meeting_id + '.mp3'
     recording_file = out_dir + meeting_id + '.mkv'
-    full_recording_file = out_dir + meeting_id + '.full.mkv'
 
     audio_track_exists = true
     basedir = File.dirname(__FILE__)
@@ -119,34 +118,19 @@ class Vconn1 < Test::Unit::TestCase
       @driver.find_element(:id, 'login-button').click
     end
     @driver.get(@base_url + '/' + meeting_id + '?launcher=false&fcsContent=true&pbMode=normal')
-
+	# this PID file is created by capture_audio.sh
+	steam_pid = out_dir + '/steam_' + meeting_id + '.pid' 
     # FFmpeg magic
     # record X11's display
-    if !ffmpeg_x11_grab(ffmpeg_bin, resolution, frame_rate, x_display, extra_duration.to_s, recording_file)
+    if !ffmpeg_x11_grab(ffmpeg_bin, meeting_id, resolution, frame_rate, x_display, extra_duration.to_s, recording_file, steam_pid)
       return false
     end
 
-    # use scene detector feature to determine when the recording had actually started
-    if !first_scene = ffmpeg_detect_scene_start_time(ffmpeg_bin, recording_file, 1)
-      return false
-    end
 
-    # trim original screen recording so that it starts from when AC actually started playing the recording
-    if !ffmpeg_trim_video(ffmpeg_bin, recording_file, first_scene, dur_sec.to_s, out_dir + meeting_id + '.final.mkv')
-      return false
-    end
-
-    # merge video and audio files
-    if audio_track_exists && !ffmpeg_merge_vid_and_aud_tracks(ffmpeg_bin, out_dir + meeting_id + '.final.mkv', audio_file, full_recording_file)
-      return false
-    elsif !audio_track_exists
-      FileUtils.cp(out_dir + meeting_id + '.final.mkv', full_recording_file)
-    end
-
-    if File.exist?(full_recording_file)
-      @logger.info('Final output saved to: ' + full_recording_file + ' :)')
+    if File.exist?(recording_file)
+      @logger.info('Final output saved to: ' + recording_file + ' :)')
     else
-      @logger.error("Something failed and I couldn't find a " + full_recording_file + ' to process :(')
+      @logger.error("Something failed and I couldn't find a " + recording_file + ' to process :(')
       return false
     end
 
@@ -163,17 +147,30 @@ class Vconn1 < Test::Unit::TestCase
     sco_id = ENV['SCO_ID']
 
     client = init_client(ENV['KALTURA_BASE_ENDPOINT'], ENV['KALTURA_PARTNER_ID'], ENV['KALTURA_PARTNER_SECRET'])
-    ingest_to_kaltura(client, entry_name, meeting_id, sco_id, full_recording_file)
+    ingest_to_kaltura(client, entry_name, meeting_id, sco_id, recording_file)
   end
 
-  def ffmpeg_x11_grab(ffmpeg_bin, resolution, frame_rate, x_display, duration, recording_file)
-    # we crop the browser's address bar here because of https://github.com/mozilla/geckodriver/issues/1281
-    # if it's ever fixed, we could drop that and start Firefox in full screen mode with:
-    # @driver.manage.window.full_screen
-    ffmpeg_x11grab_command = ffmpeg_bin + ' -s ' + resolution + ' -framerate ' + frame_rate.to_s + ' -f x11grab -i :' + x_display.to_s + ' -t ' + duration.to_s + ' -vf "crop=in_w:in_h-147" -y ' + recording_file.shellescape
+  def ffmpeg_x11_grab(ffmpeg_bin, meeting_id, resolution, frame_rate, x_display, duration, recording_file, steam_pid)
+	my_sink = nil
+	# wait for the capture_audio magic to end so that we'll have pulse audio sinks
+	while ! File.exist?(steam_pid)
+		sleep 5 
+	end
+	my_sink, stdeerr, status = Open3.capture3("pacmd list-sources | grep -PB 1 \"" + meeting_id + ".*monitor>\" |  head -n 1 | perl -pe 's/.* //g'")
+	my_sink = my_sink.delete!("\n")
+	my_sink = my_sink.to_i
+	if ! my_sink.is_a? Numeric
+		return false
+	end
+
+	# override duration for faster testing/debugging 
+    # duration = 120
+    ffmpeg_x11grab_command = ffmpeg_bin + ' -s ' + resolution + ' -framerate ' + frame_rate.to_s + ' -f x11grab -i :' + x_display.to_s + ' -f pulse -i ' + my_sink.to_s + '  -c:v libx264  -acodec libmp3lame -crf 0 -preset ultrafast -t ' + duration.to_s + ' -vf "crop=in_w:in_h-147" -y ' + recording_file.shellescape
     @logger.info('X11grab command is: ' + ffmpeg_x11grab_command)
 
-    system ffmpeg_x11grab_command
+    system ffmpeg_x11grab_command 
+		# delete the PID capture_audio.sh creates since we're done with it
+		File.delete(steam_pid) if File.exist?(steam_pid)
     if $?.exitstatus != 0
       @logger.error('ffmpeg x11grab command exited with ' + $?.exitstatus.to_s + ':(')
       return false
@@ -183,6 +180,7 @@ class Vconn1 < Test::Unit::TestCase
 
   def ffmpeg_detect_scene_start_time(ffmpeg_bin,recording_file,scene_number)
     ffmpeg_scene_command=ffmpeg_bin + " -i " + recording_file.shellescape + " -filter:v \"select='gt(scene,0.3)',showinfo\"  -frames:v " + scene_number.to_s + " -f null  - 2>&1|grep pts_time|sed 's/.*pts_time:\\([0-9.]*\\).*/\\1/'"
+
     @logger.info('Scene command is: ' + ffmpeg_scene_command)
     first_scene, stdeerr, status = Open3.capture3(ffmpeg_scene_command)
     # because of our sed here, status.success? will always be true so need to insepct the value further.
@@ -196,11 +194,13 @@ class Vconn1 < Test::Unit::TestCase
       @logger.error('ffmpeg scene detection command came back with unexpected output: ' + first_scene + ' :(')
       return false
     end
+
+    @logger.info('First scene detected as: ' + first_scene.to_s)
     return first_scene
   end
 
-  def ffmpeg_trim_video(ffmpeg_bin, recording_file, start_time, duration, output_file)
-    ffmpeg_trim_command=ffmpeg_bin + " -i " + recording_file.shellescape + " -ss " + start_time.to_s + " -t " + duration.to_s + " -c copy -strict -2 -an -y " + output_file.shellescape	
+  def ffmpeg_trim_video(ffmpeg_bin, recording_file, start_time, output_file)
+    ffmpeg_trim_command = ffmpeg_bin + " -i " + recording_file.shellescape + " -ss " + start_time.to_s +  " -c copy -y " + output_file.shellescape	
     @logger.info('Trim command is: ' + ffmpeg_trim_command)
     system ffmpeg_trim_command
     if $?.exitstatus != 0

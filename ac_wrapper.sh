@@ -4,6 +4,10 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
+if [ -z "$OUTDIR" ]; then
+    OUTDIR=/tmp/ac_output
+fi
+
 for UTIL in pidof xvfb-run xvfb-run-safe curl unzip dos2unix; do
     if [ ! -x "`which $UTIL 2> /dev/null`" ]; then
         echo "Need to install $UTIL."
@@ -32,5 +36,10 @@ while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORI
     DESCRIPTION=`echo $DESCRIPTION | sed 's^"^^g'`
     export SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORIG_CREATED_AT USER_ID DURATION
     nohup sh -c "xvfb-run-safe -s \"-auth /tmp/xvfb.auth -ac -screen 0 1280x720x24\" $BASEDIR/ac_new.rb " > /tmp/ac_$MEETING_ID.log 2>&1 &
-    sleep 2
+    X_SERVER_DISPLAY_NUM=`cat /var/tmp/last_xvfb_display`
+    while ! pacmd list-sink-inputs |grep -q "window.x11.display = \":$X_SERVER_DISPLAY_NUM\"" ;do
+    	    echo "I'll nap till I find my audio sink for $MEETING_ID"
+    	    sleep 2
+    done
+    $BASEDIR/capture_audio.sh $MEETING_ID
 done 3< $ASSET_LIST_FILE
