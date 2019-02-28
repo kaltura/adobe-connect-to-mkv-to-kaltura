@@ -1,4 +1,10 @@
 #!/bin/bash
+
+if [ ! -x "`which xvfb-run 2> /dev/null`" ]; then
+    echo "Need to install xvfb-run."
+    exit 1
+fi
+
 # allow settings to be overridden via ENV vars
 : "${XVFB_LOCKDIR:=$HOME/.xvfb-locks}"
 : "${XVFB_DISPLAY_MIN:=99}"
@@ -7,17 +13,19 @@
 # assuming only one user will be using this, place the locks in the home directory
 # to avoid vulnerability to symlink attacks.
 # if multiple users are to make use of this wrapper concurrently, you should write to /tmp instead
-mkdir -p -- "$XVFB_LOCKDIR" || exit
+mkdir -p -- "$XVFB_LOCKDIR" || exit 2
 
 i=$XVFB_DISPLAY_MIN
-while (( i < XVFB_DISPLAY_MAX )); do
-  if [ -f "/tmp/.X${i}-lock" ]; then                # avoid an obvious open display
-    (( ++i )); continue
-  fi
-  exec 5>"$XVFB_LOCKDIR/$i" || continue           # open a lockfile
-  if flock -x -n 5; then                          # attempt lock
-    export X_SERVER_DISPLAY_NUM=$i		  # export selected display for use in subsequent scripts
-    exec xvfb-run --server-num="$i" "$@" || exit  # once locked, run xvfb-run on selected display 
-  fi
-  (( i++ ))
+while ((i < XVFB_DISPLAY_MAX)); do
+    if [ -f "/tmp/.X${i}-lock" ]; then # avoid an obvious open display
+        ((++i))
+        continue
+    fi
+    exec 5> "$XVFB_LOCKDIR/$i" || continue # open a lockfile
+    if flock -x -n 5; then # attempt lock
+        export X_SERVER_DISPLAY_NUM=$i               # export selected display for use in subsequent scripts
+	echo $X_SERVER_DISPLAY_NUM > /var/tmp/last_xvfb_display
+        exec xvfb-run --server-num="$i" "$@" || exit # once locked, run xvfb-run on selected display
+    fi
+    ((i++))
 done

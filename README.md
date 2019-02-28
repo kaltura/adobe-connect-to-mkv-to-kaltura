@@ -4,16 +4,16 @@
 This code generates MKV files out of AC recordings and ingests them onto Kaltura.
 
 ## General flow
-- Download the ZIP archive and concat the audio FLVs into one MP3 using FFmpeg
+- Download the ZIP archive and concat the audio FLVs into one MP3 using FFmpeg [this is done in order to determine the session's length so that we know how long to record using FFmpeg's x11grab]
 - Using Selenium and Mozilla's Geckodriver, launch Firefox with Xvfb and navigate to the recording's URL so that it plays using the Adobe SWF
-- Use FFmpeg's x11grab option to capture the screen display
-- Once done, use FFmpeg's scene detection feature to determine when the recording had actually started [this is needed because the AC app takes a long time to load and there's no other way to determine how long it actually took]
-- Merge the audio and video files and use the Kaltura API to ingest the resulting file
+- Created the needed audio sinks so that the audio track can be captured [see `capture_audio.sh`]
+- Use FFmpeg's x11grab option to capture the screen display and audio [via pulse]
 
 ## Pre-requisites
 - cURL CLI
 - unzip
 - xvfb
+- pulseaudio [provided by the `pulaseuadio` and `pulseaudio-utils` packages in Debian/Ubuntu]
 - pidof [provided by the `sysvinit-utils` package in Debian/Ubuntu and by `sysvinit-tools` in RHEL/CentOS/FC]
 - Firefox with the Flash plugin loaded [tested with 60.0.1 but other recent versions should work as well]
 - Ruby [2.3 and 2.5 were tested]
