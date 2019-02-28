@@ -82,7 +82,6 @@ class Vconn1 < Test::Unit::TestCase
     resolution = '1280x720'
     frame_rate = '30'
     audio_file = out_dir + meeting_id + '.mp3'
-    captured_audio_file = out_dir + 'steam_' + meeting_id + '.ogg'
     recording_file = out_dir + meeting_id + '.mkv'
 
     audio_track_exists = true
