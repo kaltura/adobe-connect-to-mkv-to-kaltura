@@ -45,6 +45,7 @@ mv /tmp/adobe-connect-to-mkv-to-kaltura-master $AC_BASE_PREFIX/adobe-connect-to-
 cd $AC_BASE_PREFIX/adobe-connect-to-mkv-to-kaltura
 cp xvfb-run-safe /usr/local/bin
 cp ac.rc /etc/profile.d/ac.sh
+modprobe snd-aloop
 # run the pulseaudio daemon on DISPLAY 1 [never used by ac_wrapper as it starts assigning displayed from 99 and above]
 # pulseaudio will be used for recording the audio streams using ffmpeg x11grab in ac_new.rb
 Xvfb :1 -screen 0 1280x720x24 &
