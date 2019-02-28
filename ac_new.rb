@@ -164,7 +164,7 @@ class Vconn1 < Test::Unit::TestCase
 	end
 
 	# override duration for faster testing/debugging 
-    # duration = 120
+    #duration = 120
     ffmpeg_x11grab_command = ffmpeg_bin + ' -s ' + resolution + ' -framerate ' + frame_rate.to_s + ' -f x11grab -i :' + x_display.to_s + ' -f pulse -i ' + my_sink.to_s + '  -c:v libx264  -acodec libmp3lame -crf 0 -preset ultrafast -t ' + duration.to_s + ' -vf "crop=in_w:in_h-147" -y ' + recording_file.shellescape
     @logger.info('X11grab command is: ' + ffmpeg_x11grab_command)
 

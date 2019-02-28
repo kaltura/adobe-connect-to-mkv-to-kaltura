@@ -14,10 +14,10 @@ for UTIL in pidof xvfb-run xvfb-run-safe curl unzip dos2unix; do
         exit 2
     fi
 done
-#if ! pulseaudio --check;then 
-#	Xvfb :1 -screen 0 1280x720x24 &
-#	DISPLAY=:1 pulseaudio --start --disallow-exit -vvv --log-target=newfile:"/var/tmp/mypulseaudio.log"
-#fi
+if ! pulseaudio --check;then 
+	Xvfb :1 -screen 0 1280x720x24 &
+	DISPLAY=:1 pulseaudio --start --disallow-exit -vvv --log-target=newfile:"/var/tmp/mypulseaudio.log"
+fi
 
 BASEDIR=`dirname $0`
 ASSET_LIST_FILE=$1
@@ -40,6 +40,7 @@ while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORI
     DESCRIPTION=`echo $DESCRIPTION | sed 's^"^^g'`
     export SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORIG_CREATED_AT USER_ID DURATION
     nohup sh -c "xvfb-run-safe -s \"-auth /tmp/xvfb.auth -ac -screen 0 1280x720x24\" $BASEDIR/ac_new.rb " > /tmp/ac_$MEETING_ID.log 2>&1 &
+    sleep 4
     X_SERVER_DISPLAY_NUM=`cat /var/tmp/last_xvfb_display`
     while ! pacmd list-sink-inputs |grep -q "window.x11.display = \":$X_SERVER_DISPLAY_NUM\"" ;do
     	    echo "I'll nap till I find my audio sink for $MEETING_ID"
