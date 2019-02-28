@@ -119,8 +119,8 @@ class Vconn1 < Test::Unit::TestCase
       @driver.find_element(:id, 'login-button').click
     end
     @driver.get(@base_url + '/' + meeting_id + '?launcher=false&fcsContent=true&pbMode=normal')
-		# this PID file is created by capture_audio.sh
-		steam_pid = out_dir + '/steam_' + meeting_id + '.pid' 
+	# this PID file is created by capture_audio.sh
+	steam_pid = out_dir + '/steam_' + meeting_id + '.pid' 
     # FFmpeg magic
     # record X11's display
     if !ffmpeg_x11_grab(ffmpeg_bin, meeting_id, resolution, frame_rate, x_display, extra_duration.to_s, recording_file, steam_pid)
@@ -152,19 +152,19 @@ class Vconn1 < Test::Unit::TestCase
   end
 
   def ffmpeg_x11_grab(ffmpeg_bin, meeting_id, resolution, frame_rate, x_display, duration, recording_file, steam_pid)
-		my_sink = nil
-		# wait for the capture_audio magic to end so that we'll have pulse audio sinks
-		while ! File.exist?(steam_pid)
-			sleep 5 
-		end
-		my_sink, stdeerr, status = Open3.capture3("pacmd list-sources | grep -PB 1 \"" + meeting_id + ".*monitor>\" |  head -n 1 | perl -pe 's/.* //g'")
-		my_sink = my_sink.delete!("\n")
-		my_sink = my_sink.to_i
-		if ! my_sink.is_a? Numeric
-			return false
-		end
-    
-		# override duration for faster testing/debugging 
+	my_sink = nil
+	# wait for the capture_audio magic to end so that we'll have pulse audio sinks
+	while ! File.exist?(steam_pid)
+		sleep 5 
+	end
+	my_sink, stdeerr, status = Open3.capture3("pacmd list-sources | grep -PB 1 \"" + meeting_id + ".*monitor>\" |  head -n 1 | perl -pe 's/.* //g'")
+	my_sink = my_sink.delete!("\n")
+	my_sink = my_sink.to_i
+	if ! my_sink.is_a? Numeric
+		return false
+	end
+
+	# override duration for faster testing/debugging 
     # duration = 120
     ffmpeg_x11grab_command = ffmpeg_bin + ' -s ' + resolution + ' -framerate ' + frame_rate.to_s + ' -f x11grab -i :' + x_display.to_s + ' -f pulse -i ' + my_sink.to_s + '  -c:v libx264  -acodec libmp3lame -crf 0 -preset ultrafast -t ' + duration.to_s + ' -vf "crop=in_w:in_h-147" -y ' + recording_file.shellescape
     @logger.info('X11grab command is: ' + ffmpeg_x11grab_command)
