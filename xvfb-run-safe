@@ -21,10 +21,17 @@ while ((i < XVFB_DISPLAY_MAX)); do
         ((++i))
         continue
     fi
-    exec 5> "$XVFB_LOCKDIR/$i" || continue # open a lockfile
+    # this is an optional var to be used to understand what process uses this display
+    # technically speaking, we could read the PID inside the lock file and then do some proc lookups but this is easier
+    # if empty, the lock file name will just be the X display number
+    if [ -n "$X_SESSION_NAME" ];then
+	LOCK_NAME=${X_SESSION_NAME}_${i}
+    else
+	LOCK_NAME=$i
+    fi
+    exec 5> "$XVFB_LOCKDIR/$LOCK_NAME" || continue # open a lockfile
     if flock -x -n 5; then # attempt lock
         export X_SERVER_DISPLAY_NUM=$i               # export selected display for use in subsequent scripts
-	echo $X_SERVER_DISPLAY_NUM > /var/tmp/last_xvfb_display
         exec xvfb-run --server-num="$i" "$@" || exit # once locked, run xvfb-run on selected display
     fi
     ((i++))

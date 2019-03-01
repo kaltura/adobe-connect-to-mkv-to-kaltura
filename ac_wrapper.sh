@@ -38,10 +38,21 @@ while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORI
     CATEGORY_NAME=`echo $CATEGORY_NAME | sed 's^"^^g'`
     MEETING_NAME=`echo $MEETING_NAME | sed 's^"^^g'`
     DESCRIPTION=`echo $DESCRIPTION | sed 's^"^^g'`
-    export SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORIG_CREATED_AT USER_ID DURATION
+    : "${XVFB_LOCKDIR:=$HOME/.xvfb-locks}"
+    # since xvfb-run-safe can be used for multiple purposes, it doesn't make sense for it to know what MEETING_ID is as it's specific to this AC code.. so let's assign MEETING_ID to X_SESSION_NAME which is what it can now accept as an ENV var:
+    X_SESSION_NAME=$MEETING_ID
+    # remove previous locks with that MEETING_ID
+    rm -f $XVFB_LOCKDIR/${MEETING_ID}_*
+    export SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORIG_CREATED_AT USER_ID DURATION X_SESSION_NAME
     nohup sh -c "xvfb-run-safe -s \"-auth /tmp/xvfb.auth -ac -screen 0 1280x720x24\" $BASEDIR/ac_new.rb " > /tmp/ac_$MEETING_ID.log 2>&1 &
-    sleep 4
-    X_SERVER_DISPLAY_NUM=`cat /var/tmp/last_xvfb_display`
+    #sleep 4
+    # let's wait until xvfb-run-safe starts the X server
+    X_SERVER_DISPLAY_NUM=`ls $XVFB_LOCKDIR/${MEETING_ID}_* |awk -F "_" '{print $2}'`
+    while [ -z "$X_SERVER_DISPLAY_NUM" ];do
+	sleep 1
+    	X_SERVER_DISPLAY_NUM=`ls $XVFB_LOCKDIR/${MEETING_ID}_* |awk -F "_" '{print $2}'`
+    done
+    #X_SERVER_DISPLAY_NUM=`cat /var/tmp/last_xvfb_display`
     while ! pacmd list-sink-inputs |grep -q "window.x11.display = \":$X_SERVER_DISPLAY_NUM\"" ;do
     	    echo "I'll nap till I find my audio sink for $MEETING_ID"
     	    sleep 2
