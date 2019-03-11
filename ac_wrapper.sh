@@ -15,7 +15,7 @@ for UTIL in pidof xvfb-run xvfb-run-safe curl unzip dos2unix; do
     fi
 done
 if ! pulseaudio --check;then 
-	Xvfb :1 -screen 0 1280x720x24 &
+	Xvfb :1 -screen 0 1280x720x24 2>/dev/null &
 	DISPLAY=:1 pulseaudio --start --disallow-exit -vvv --log-target=newfile:"/var/tmp/mypulseaudio.log"
 fi
 
@@ -46,10 +46,10 @@ while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORI
     export SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORIG_CREATED_AT USER_ID DURATION X_SESSION_NAME
     nohup sh -c "xvfb-run-safe -s \"-auth /tmp/xvfb.auth -ac -screen 0 1280x720x24\" $BASEDIR/ac_new.rb " > /tmp/ac_$MEETING_ID.log 2>&1 &
     # let's wait until xvfb-run-safe starts the X server
-    X_SERVER_DISPLAY_NUM=`ls $XVFB_LOCKDIR/${MEETING_ID}_* |awk -F "_" '{print $2}'`
+    X_SERVER_DISPLAY_NUM=`ls $XVFB_LOCKDIR/${MEETING_ID}_* 2>/dev/null |awk -F "_" '{print $2}'`
     while [ -z "$X_SERVER_DISPLAY_NUM" ];do
 	sleep 1
-    	X_SERVER_DISPLAY_NUM=`ls $XVFB_LOCKDIR/${MEETING_ID}_* |awk -F "_" '{print $2}'`
+    	X_SERVER_DISPLAY_NUM=`ls $XVFB_LOCKDIR/${MEETING_ID}_* 2>/dev/null |awk -F "_" '{print $2}'`
     done
     while ! pacmd list-sink-inputs |grep -q "window.x11.display = \":$X_SERVER_DISPLAY_NUM\"" ;do
     	    echo "I'll nap till I find my audio sink for $MEETING_ID"
