@@ -52,7 +52,7 @@ while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORI
     	X_SERVER_DISPLAY_NUM=`ls $XVFB_LOCKDIR/${MEETING_ID}_* 2>/dev/null |awk -F "_" '{print $2}'`
     done
     while ! pacmd list-sink-inputs |grep -q "window.x11.display = \":$X_SERVER_DISPLAY_NUM\"" ;do
-    	    echo "I'll nap till I find my audio sink for $MEETING_ID"
+    	    echo "Recording $MEETING_ID is launching - audio sink will be available shortly."
     	    sleep 2
     done
     $BASEDIR/capture_audio.sh $MEETING_ID
