@@ -108,8 +108,8 @@ class Vconn1 < Test::Unit::TestCase
       return false
     end
 
-    # since AC takes forever to load the recording, add 2 minutes to the actual recording's duration, we'll cut the extra off later
-    extra_duration = dur_sec.to_f + 120
+    # Add a 15 seconds buffer
+    extra_duration = dur_sec.to_f + 15
 
     if ENV['AC_LOGIN_REQUIRED'] === 'true'
       @driver.get(@base_url + '/system/login?logintype=oldstyle&next=/admin')
@@ -169,9 +169,10 @@ class Vconn1 < Test::Unit::TestCase
     @logger.info('X11grab command is: ' + ffmpeg_x11grab_command)
 
     system ffmpeg_x11grab_command 
+		rc=$?
 		# delete the PID capture_audio.sh creates since we're done with it
 		File.delete(steam_pid) if File.exist?(steam_pid)
-    if $?.exitstatus != 0
+    if rc.exitstatus != 0
       @logger.error('ffmpeg x11grab command exited with ' + $?.exitstatus.to_s + ':(')
       return false
     end
