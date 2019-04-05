@@ -58,18 +58,21 @@ def output_data(connect,sco_id)
     end
   end
   if !found_duration
-      if response.at_xpath('//sco/duration')
-        line.push(response.at_xpath('//sco/duration').text)
-      elsif response.at_xpath('//sco/date-begin') && response.at_xpath('//sco/date-end')
-        startTime = DateTime.parse(response.at_xpath('//sco/date-begin').text).to_time.to_i
-        endTime = DateTime.parse(response.at_xpath('//sco/date-end').text).to_time.to_i
+      duration_xpath = '//sco/duration'
+      start_date_xpath = '//sco/date-begin'
+      end_date_xpath = '//sco/date-end'
+      if response.at_xpath(duration_xpath)
+        line.push(response.at_xpath(duration_xpath).text)
+      elsif response.at_xpath(start_date_xpath) && response.at_xpath(end_date_xpath)
+        startTime = DateTime.parse(response.at_xpath(start_date_xpath).text).to_time.to_i
+        endTime = DateTime.parse(response.at_xpath(end_date_xpath).text).to_time.to_i
         duration = endTime - startTime
         line.push(duration.to_s)
       else
         line.push('')
       end
-  end 
-  
+  end  
+
   # format line into CSV string and print it out.
   csv_line_string = line.to_csv()
   print csv_line_string

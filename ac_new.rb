@@ -319,8 +319,10 @@ class Vconn1 < Test::Unit::TestCase
     filter.reference_id_equal = sco_id
     filter.status_equal = KalturaEntryStatus::READY
     existing_entries = client.media_service.list(filter)
+puts(ENV['KALTURA_ENABLE_REPLACEMENT'])
+puts(existing_entries.total_count)
 
-    if ENV['ENABLE_REPLACEMENT'] && existing_entries.total_count > 0
+    if ENV['KALTURA_ENABLE_REPLACEMENT'] && existing_entries.total_count > 0
         entry_id = existing_entries.objects[0].id
         replace_existing_entry(client, entry_id, resource)
     else
@@ -378,10 +380,11 @@ class Vconn1 < Test::Unit::TestCase
 
   def replace_existing_entry(client, entry_id, resource)
     @logger.info("Replacing content for entry " + entry_id)
-    results = client.media_service.update_content(entry_id, resource)
-    if !defined? results.id
-      @logger.error("media_service.update_content() failed:(")
-      return false
+    begin
+    	results = client.media_service.update_content(entry_id, resource)
+    rescue Kaltura::KalturaAPIError => e
+	@logger.error("Exception Class: #{e.class.name}")
+        @logger.error("Exception Message: #{e.message}")
     end
 
     return entry_id
