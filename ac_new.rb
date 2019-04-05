@@ -380,9 +380,11 @@ class Vconn1 < Test::Unit::TestCase
     @logger.info("Replacing content for entry " + entry_id)
     results = client.media_service.update_content(entry_id, resource)
     if !defined? results.id
-      @logger.error("media_service.set_content() failed:(")
+      @logger.error("media_service.update_content() failed:(")
       return false
     end
+
+    return entry_id
   end
 
   def element_present?(how, what)
