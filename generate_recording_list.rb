@@ -47,16 +47,28 @@ def output_data(connect,sco_id)
   end
 
   # Calculate the duration if available
-  if response.at_xpath('//sco/duration')
-    line.push(response.at_xpath('//sco/duration').text)
-  elsif response.at_xpath('//sco/date-begin') && response.at_xpath('//sco/date-end')
-    startTime = DateTime.parse(response.at_xpath('//sco/date-begin').text).to_time.to_i
-    endTime = DateTime.parse(response.at_xpath('//sco/date-end').text).to_time.to_i
-    duration = endTime - startTime
-    line.push(duration.to_s)
-  else
-    line.push('')
+  found_duration = false
+  if $duration_mapping
+    for row in $duration_mapping do
+      if row[0] == sco_id
+        line.push(row[1].to_f*60)
+        found_duration = true
+        break
+      end
+    end
   end
+  if !found_duration
+      if response.at_xpath('//sco/duration')
+        line.push(response.at_xpath('//sco/duration').text)
+      elsif response.at_xpath('//sco/date-begin') && response.at_xpath('//sco/date-end')
+        startTime = DateTime.parse(response.at_xpath('//sco/date-begin').text).to_time.to_i
+        endTime = DateTime.parse(response.at_xpath('//sco/date-end').text).to_time.to_i
+        duration = endTime - startTime
+        line.push(duration.to_s)
+      else
+        line.push('')
+      end
+  end 
   
   # format line into CSV string and print it out.
   csv_line_string = line.to_csv()
@@ -89,6 +101,12 @@ $user_mapping = nil
 if ENV['SCOID_USER_MAPPING'] && File.file?(ENV['SCOID_USER_MAPPING'])
   # slurp file into array of arrays
   $user_mapping = CSV.read(ENV['SCOID_USER_MAPPING'])
+end
+
+$duration_mapping = nil
+if ENV['SCOID_DURATION_MAPPING'] && File.file?(ENV['SCOID_DURATION_MAPPING'])
+  # slurp file into array of arrays
+  $duration_mapping = CSV.read(ENV['SCOID_DURATION_MAPPING'])
 end
 
 text = File.open(ARGV[0]).read
