@@ -116,8 +116,7 @@ If the `KALTURA_METADATA_SYSTEM_NAME` and `KALTURA_METADATA_XML` ENV vars are se
 
 If the `SCOID_USER_MAPPING` ENV var is set, the `generate_recording_list.rb` script will use this mapping file to map SCO IDs to new content owners. If the ENV var is not set, the script will default to using the data returned by the Adobe Connect API to set the content owners.
 
-If the `ENABLE_REPLACEMENT` ENV var is set, the logic will attempt to replace the content of an existing Kaltura entry with the same reference ID value as the given SCOID, rather than create a new entry. If no entry with a matching refere
-nce ID exists, a new one will be created.
+If the `ENABLE_REPLACEMENT` ENV var is set, the logic will attempt to replace the content of an existing Kaltura entry with the same reference ID value as the given SCOID, rather than create a new entry. If no entry with a matching reference ID exists, a new one will be created.
 
 ## Contributing
 
