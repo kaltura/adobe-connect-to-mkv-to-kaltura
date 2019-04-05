@@ -118,7 +118,7 @@ If the `SCOID_USER_MAPPING` ENV var is set, the `generate_recording_list.rb` scr
 
 If the `SCOID_DURATION_MAPPING` ENV var is set, the `generate_recording_list.rb` script will use this mapping file to extract recording durations where possible.
 
-If the `ENABLE_REPLACEMENT` ENV var is set, the logic will attempt to replace the content of an existing Kaltura entry with the same reference ID value as the given SCOID, rather than create a new entry. If no entry with a matching reference ID exists, a new one will be created.
+If the `KALTURA_ENABLE_REPLACEMENT` ENV var is set, the logic will attempt to replace the content of an existing Kaltura entry with the same reference ID value as the given SCOID, rather than create a new entry. If no entry with a matching reference ID exists, a new one will be created.
 
 ## Contributing
 
