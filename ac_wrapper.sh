@@ -48,12 +48,12 @@ while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORI
     # let's wait until xvfb-run-safe starts the X server
     X_SERVER_DISPLAY_NUM=`ls $XVFB_LOCKDIR/${MEETING_ID}_* 2>/dev/null |awk -F "_" '{print $2}'`
     while [ -z "$X_SERVER_DISPLAY_NUM" ];do
-	sleep 1
+			sleep 1
     	X_SERVER_DISPLAY_NUM=`ls $XVFB_LOCKDIR/${MEETING_ID}_* 2>/dev/null |awk -F "_" '{print $2}'`
     done
+		echo "Recording $MEETING_ID is launching - audio sink will be available shortly."
     while ! pacmd list-sink-inputs |grep -q "window.x11.display = \":$X_SERVER_DISPLAY_NUM\"" ;do
-    	    echo "Recording $MEETING_ID is launching - audio sink will be available shortly."
-    	    sleep 2
+    	    perl -e "select(undef,undef,undef,0.2);"
     done
     $BASEDIR/capture_audio.sh $MEETING_ID
 done 3< $ASSET_LIST_FILE

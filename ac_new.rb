@@ -154,7 +154,7 @@ class Vconn1 < Test::Unit::TestCase
 	my_sink = nil
 	# wait for the capture_audio magic to end so that we'll have pulse audio sinks
 	while ! File.exist?(steam_pid)
-		sleep 5 
+		sleep 0.1 
 	end
 	my_sink, stdeerr, status = Open3.capture3("pacmd list-sources | grep -PB 1 \"" + meeting_id + ".*monitor>\" |  head -n 1 | perl -pe 's/.* //g'")
 	my_sink = my_sink.delete!("\n")
