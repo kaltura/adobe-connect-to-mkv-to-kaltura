@@ -93,7 +93,9 @@ class Vconn1 < Test::Unit::TestCase
       audio_track_exists = false
     end
 
-    if audio_track_exists
+    if duration.to_f > 0
+        dur_sec = duration.to_f
+   elsif audio_track_exists
       # get duration from the MP3 file, we'll use that to determine how long ffmpeg should be recording for
       dur_sec, stdeerr, status = Open3.capture3(ffprobe_bin + ' -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' + audio_file.shellescape)
       dur_sec = dur_sec.delete!("\n")
@@ -101,8 +103,6 @@ class Vconn1 < Test::Unit::TestCase
         log.error('Failed to get audio track duration. Exited with ' + $?.exitstatus.to_s + ':(')
         return false
       end
-    elsif duration
-      dur_sec = duration.to_f
     else
       log.error('Failed to get duration from audio track or XML metadata :(')
       return false
@@ -312,6 +312,25 @@ class Vconn1 < Test::Unit::TestCase
     resume_at = -1
 
     results = client.upload_token_service.upload(upload_token_id, file_data, resume, final_chunk, resume_at)
+    resource = KalturaUploadedFileTokenResource.new()
+    resource.token = upload_token_id
+
+    filter = KalturaMediaEntryFilter.new()
+    filter.reference_id_equal = sco_id
+    filter.status_equal = KalturaEntryStatus::READY
+    existing_entries = client.media_service.list(filter)
+puts(ENV['KALTURA_ENABLE_REPLACEMENT'])
+puts(existing_entries.total_count)
+
+    if ENV['KALTURA_ENABLE_REPLACEMENT'] && existing_entries.total_count > 0
+        entry_id = existing_entries.objects[0].id
+        replace_existing_entry(client, entry_id, resource)
+    else
+        add_entry_as_new(client, entry_name, meeting_id, sco_id, resource)
+    end
+  end
+
+  def add_entry_as_new(client, entry_name, meeting_id, sco_id, resource)
     entry = KalturaMediaEntry.new()
     entry.media_type = KalturaMediaType::VIDEO
     entry.name = entry_name
@@ -328,16 +347,13 @@ class Vconn1 < Test::Unit::TestCase
 
     results = client.media_service.add(entry)
     entry_id = results.id
-    
-    resource = KalturaUploadedFileTokenResource.new()
-    resource.token = upload_token_id
 
     results = client.media_service.add_content(entry_id, resource)
     if !defined? results.id
       @logger.error("media_service.add_content() failed:(")
       return false
     end
-    @logger.info("Uploaded " + vid_file_path + ", entry ID: " + results.id)
+    @logger.info("Created entry ID: " + results.id)
     if ENV['KALTURA_ROOT_CATEGORY_ID'] && ENV['KALTURA_ROOT_CATEGORY_PATH']
       create_category_association(client, ENV['KALTURA_ROOT_CATEGORY_ID'], ENV['KALTURA_ROOT_CATEGORY_PATH'], ENV['CATEGORY_NAME'], entry_id)
     end
@@ -351,15 +367,27 @@ class Vconn1 < Test::Unit::TestCase
           client.metadata_service.add(metadata_profile_id, Kaltura::KalturaMetadataObjectType::ENTRY, entry_id, metadata)
         rescue Kaltura::KalturaAPIError => e
           @logger.error("Error occurred creating orig_created_at custom metadata for entry #{entry_id}")
-      	  @logger.error("Exception Class: #{ e.class.name }")
-      	  @logger.error("Exception Message: #{ e.message }")
-      	  # enable to get a BT
-      	  # @logger.info("Exception Message: #{ e.backtrace }")
+          @logger.error("Exception Class: #{ e.class.name }")
+          @logger.error("Exception Message: #{ e.message }")
+          # enable to get a BT
+          # @logger.info("Exception Message: #{ e.backtrace }")
         end
       end
     end
 
     return results.id
+  end
+
+  def replace_existing_entry(client, entry_id, resource)
+    @logger.info("Replacing content for entry " + entry_id)
+    begin
+    	results = client.media_service.update_content(entry_id, resource)
+    rescue Kaltura::KalturaAPIError => e
+	@logger.error("Exception Class: #{e.class.name}")
+        @logger.error("Exception Message: #{e.message}")
+    end
+
+    return entry_id
   end
 
   def element_present?(how, what)
