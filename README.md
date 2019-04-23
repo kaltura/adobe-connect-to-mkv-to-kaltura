@@ -20,7 +20,7 @@ This code generates MKV files out of AC recordings and ingests them onto Kaltura
 - Firefox with the Flash plugin loaded [tested with 60.0.1 but other recent versions should work as well]
 - Ruby [2.3 and 2.5 were tested]
 - Ruby Gems: `adobe_connect`, `selenium-webdriver`, `open3`, `kaltura-client`, `test-unit`, `shellwords`, `logger`
-- FFmpeg [with x11grab support, tested with 2.8.14 and 3.4.2 as available by installing Ubuntu's `ffmpeg` package]
+- FFmpeg [with x11grab and Pulse audio support, tested with FFmpeg 4.0.2]
 - The Mozilla [Geckodriver](https://github.com/mozilla/geckodriver/releases) [tested with v0.20.1]:
 
 ## Configuration
