@@ -14,7 +14,7 @@ def output_data(connect,sco_id)
   line.push(response.at_xpath('//sco//name').text.tr(',', '').tr('(','').tr(')',''))
   # if the recording has a description available through the API- add it to the CSV
   if response.at_xpath('//sco//description')
-    line.push(response.at_xpath('//sco//description').text.tr(',', '').tr('(','').tr(')',''))
+    line.push(response.at_xpath('//sco//description').text.tr(',', '').tr('(','').tr(')','').gsub("\n",'<BR>'))
   else
     # we want to maintain the same amount of values in each line array
     line.push('')
