@@ -354,8 +354,13 @@ class Vconn1 < Test::Unit::TestCase
         resume = false
         final_chunk = true
         resume_at = -1
-
-        results = client.upload_token_service.upload(upload_token_id, file_data, resume, final_chunk, resume_at)
+	
+	begin
+                results = client.upload_token_service.upload(upload_token_id, file_data, resume, final_chunk, resume_at)
+        rescue
+                @logger.error("Exception Class: #{e.class.name}")
+                @logger.error("Exception Message: #{e.message}")
+        end
     end
 
     resource = KalturaUploadedFileTokenResource.new()
