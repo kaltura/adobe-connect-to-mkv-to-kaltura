@@ -12,6 +12,7 @@ require 'fileutils'
 include Kaltura
 
 class Vconn1 < Test::Unit::TestCase
+  Max_Upload_Size = 1.5*1024*1024*1024
   def setup
     @logger = Logger.new(STDOUT)
     @logger.level = Logger::INFO
@@ -307,7 +308,7 @@ class Vconn1 < Test::Unit::TestCase
     results = client.upload_token_service.add(upload_token)
     upload_token_id = results.id
 
-    if (File.size(vid_file_path) > 1.5*1024*1024*1024)
+    if (File.size(vid_file_path) > Max_Upload_Size)
     # chunked upload is required in this case.
 	dir=File.dirname(vid_file_path)
 	basename=File.basename(vid_file_path,'.mkv')

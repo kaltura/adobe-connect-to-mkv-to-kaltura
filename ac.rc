@@ -8,7 +8,7 @@ AC_PASSWD=""
 
 
 # num of concurrent jobs to run, should be adjusted based on available HW resources
-MAX_CONCUR_PROCS_PROCS=7
+MAX_CONCUR_PROCS=7
 FFMPEG_BIN=ffmpeg
 FFPROBE_BIN=ffprobe
 
