@@ -7,6 +7,7 @@ require 'open3'
 require 'shellwords'
 require 'kaltura'
 require 'logger'
+require 'fileutils'
 
 include Kaltura
 
@@ -306,12 +307,62 @@ class Vconn1 < Test::Unit::TestCase
     results = client.upload_token_service.add(upload_token)
     upload_token_id = results.id
 
-    file_data = File.open(vid_file_path)
-    resume = false
-    final_chunk = true
-    resume_at = -1
+    if (File.size(vid_file_path) > 2*1024*1024*1024)
+    # chunked upload is required in this case.
+	dir=File.dirname(vid_file_path)
+	basename=File.basename(vid_file_path,'.mkv')
 
-    results = client.upload_token_service.upload(upload_token_id, file_data, resume, final_chunk, resume_at)
+	chunked_dir=File.join(dir, basename+'_chunked')
+
+	if File.exist?(chunked_dir)
+		FileUtils.rm_rf(chunked_dir)
+	end
+
+	Dir.mkdir(chunked_dir)
+	system('split -d -b 500m ' + vid_file_path + ' ' + File.join(chunked_dir, 'piece'))
+
+	files = Dir.glob(chunked_dir + '/piece*')
+
+	i = 0
+	resume_at = 0
+	while i<files.count do
+        	resume = true
+        	if i==0
+                	resume = false
+        	end
+
+        	final_chunk = false
+        	if i == files.count-1
+                	final_chunk = true
+        	end
+		begin
+        		results = client.upload_token_service.upload(upload_token_id, File.open(File.join(chunked_dir,'piece0' + i.to_s)), resume, final_chunk, resume_at)
+        		resume_at += File.size(File.join(chunked_dir,'piece0' + i.to_s))
+        		i += 1
+		rescue Kaltura::KalturaAPIError => e
+			@logger.error("Exception Class: #{e.class.name}")
+			@logger.error("Exception Message: #{e.message}")
+			break
+		end
+	end
+	# if the DEBUG_MODE flag is not set to 1 - delete the chunked directory at the end of the process
+        if !ENV['AC_TOOL_DEBUG_MODE']
+		FileUtils.rm_rf(chunked_dir)
+    	end 
+    else
+        file_data = File.open(vid_file_path)
+        resume = false
+        final_chunk = true
+        resume_at = -1
+	
+	begin
+                results = client.upload_token_service.upload(upload_token_id, file_data, resume, final_chunk, resume_at)
+        rescue
+                @logger.error("Exception Class: #{e.class.name}")
+                @logger.error("Exception Message: #{e.message}")
+        end
+    end
+
     resource = KalturaUploadedFileTokenResource.new()
     resource.token = upload_token_id
 
@@ -319,8 +370,6 @@ class Vconn1 < Test::Unit::TestCase
     filter.reference_id_equal = sco_id
     filter.status_equal = KalturaEntryStatus::READY
     existing_entries = client.media_service.list(filter)
-puts(ENV['KALTURA_ENABLE_REPLACEMENT'])
-puts(existing_entries.total_count)
 
     if ENV['KALTURA_ENABLE_REPLACEMENT'] && existing_entries.total_count > 0
         entry_id = existing_entries.objects[0].id
