@@ -306,12 +306,48 @@ class Vconn1 < Test::Unit::TestCase
     results = client.upload_token_service.add(upload_token)
     upload_token_id = results.id
 
-    file_data = File.open(vid_file_path)
-    resume = false
-    final_chunk = true
-    resume_at = -1
+    if (File.size(vid_file_path) > 2*1024*1024*1024)
+    # chunked upload is required in this case.
+	dir=File.dirname(vid_file_path)
+	basename=File.basename(vid_file_path,'.mkv')
 
-    results = client.upload_token_service.upload(upload_token_id, file_data, resume, final_chunk, resume_at)
+	chunked_dir=File.join(dir, basename+'_chunked')
+
+	if File.exist?(chunked_dir)
+		system('rm -rf ' + chunked_dir)
+	end
+
+	Dir.mkdir(chunked_dir)
+	system('split -d -b 500m ' + vid_file_path + ' ' + File.join(chunked_dir, 'piece'))
+
+	files = Dir.glob(chunked_dir + '/piece*')
+
+	i=0
+	sum=0
+	while i<files.count do
+        	resume = true
+        	if i==0
+                	resume = false
+        	end
+
+        	final_chunk = false
+        	if i == files.count-1
+                	final_chunk = true
+        	end
+
+        	results = client.upload_token_service.upload(upload_token_id, File.open(File.join(chunked_dir,'piece0' + i.to_s)), resume, final_chunk, sum)
+        	sum += File.size(File.join(chunked_dir,'piece0' + i.to_s))
+        	i += 1
+	end
+    else
+        file_data = File.open(vid_file_path)
+        resume = false
+        final_chunk = true
+        resume_at = -1
+
+        results = client.upload_token_service.upload(upload_token_id, file_data, resume, final_chunk, resume_at)
+    end
+
     resource = KalturaUploadedFileTokenResource.new()
     resource.token = upload_token_id
 
