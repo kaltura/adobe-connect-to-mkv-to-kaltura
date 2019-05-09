@@ -346,7 +346,7 @@ class Vconn1 < Test::Unit::TestCase
 		end
 	end
 	# if the DEBUG_MODE flag is not set to 1 - delete the chunked directory at the end of the process
-        if !ENV['DEBUG_MODE']
+        if !ENV['AC_TOOL_DEBUG_MODE']
 		FileUtils.rm_rf(chunked_dir)
     	end 
     else
