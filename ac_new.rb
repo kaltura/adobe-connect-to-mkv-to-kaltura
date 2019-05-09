@@ -307,7 +307,7 @@ class Vconn1 < Test::Unit::TestCase
     results = client.upload_token_service.add(upload_token)
     upload_token_id = results.id
 
-    if (File.size(vid_file_path) > 2*1024*1024*1024)
+    if (File.size(vid_file_path) > 1.5*1024*1024*1024)
     # chunked upload is required in this case.
 	dir=File.dirname(vid_file_path)
 	basename=File.basename(vid_file_path,'.mkv')
