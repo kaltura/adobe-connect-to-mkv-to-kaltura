@@ -358,7 +358,7 @@ class Vconn1 < Test::Unit::TestCase
 	
 	begin
                 results = client.upload_token_service.upload(upload_token_id, file_data, resume, final_chunk, resume_at)
-        rescue
+        rescue Kaltura::KalturaAPIError => e
                 @logger.error("Exception Class: #{e.class.name}")
                 @logger.error("Exception Message: #{e.message}")
         end
