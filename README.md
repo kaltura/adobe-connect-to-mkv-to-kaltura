@@ -5,7 +5,10 @@
 This code generates MKV files out of AC recordings and ingests them onto Kaltura.
 
 
-**IMPORTANT NOTE: this process was tested successfully on Ubuntu 16.04 against an on-premise Adobe Connect instance. It should work equally well against Adobe's SaaS and may very well work with other modern Linux distros (though it was never tested with anything but Ubuntu 16.04 and so, its use is recommended).**
+**IMPORTANT NOTE: this process was tested successfully on Ubuntu 16.04 against an on-premise Adobe Connect instance. It should work equally well against Adobe's SaaS and may very well work with other modern Linux distros (though it was never tested with anything but Ubuntu 16.04 and so, its use is recommended).
+
+Also, more recent versions of Firefox seem to block the use of Flash entirely. For the purpose of running this tool, you should download version 60.0 from here https://ftp.mozilla.org/pub/firefox/releases/60.0/linux-x86_64/en-US/firefox-60.0.tar.bz2 rather than use what is currently available from the 16.04 official repos (71.0+build5-0ubuntu0.16.04.1 at the time of writing this).
+**
 
 ## General flow
 - Download the ZIP archive and concat the audio FLVs into one MP3 using FFmpeg [this is done in order to determine the session's length so that we know how long to record using FFmpeg's x11grab]
