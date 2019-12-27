@@ -21,7 +21,7 @@ Also, more recent versions of Firefox seem to block the use of Flash entirely. F
 - xvfb
 - pulseaudio [provided by the `pulaseuadio` and `pulseaudio-utils` packages in Debian/Ubuntu]
 - pidof [provided by the `sysvinit-utils` package in Debian/Ubuntu and by `sysvinit-tools` in RHEL/CentOS/FC]
-- Firefox with the Flash plugin loaded [tested with 60.0.1 but other recent versions should work as well]
+- Firefox with the Flash plugin loaded [tested with 60.0.1]
 - Ruby [2.3 and 2.5 were tested]
 - Ruby Gems: `adobe_connect`, `selenium-webdriver`, `open3`, `kaltura-client`, `test-unit`, `shellwords`, `logger`
 - FFmpeg [with x11grab and Pulse audio support, tested with FFmpeg 4.0.2]
