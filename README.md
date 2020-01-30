@@ -29,6 +29,8 @@ Also, more recent versions of Firefox seem to block the use of Flash entirely. F
 
 ## Configuration
 
+When using Ubuntu or Debian, you can simply run `ac_setup_debian_ubuntu.sh` in order to complete the initial setup.
+
 ### Flash plugin
 
 In order for this to work, the Flash plugin must be loaded by Firefox.
