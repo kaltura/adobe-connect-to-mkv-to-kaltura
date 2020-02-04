@@ -337,8 +337,8 @@ class Vconn1 < Test::Unit::TestCase
                 	final_chunk = true
         	end
 		begin
-        		results = client.upload_token_service.upload(upload_token_id, File.open(File.join(chunked_dir,'piece0' + i.to_s)), resume, final_chunk, resume_at)
-        		resume_at += File.size(File.join(chunked_dir,'piece0' + i.to_s))
+        		results = client.upload_token_service.upload(upload_token_id, File.open(File.join(chunked_dir,'piece' + format('%02d', i.to_s))), resume, final_chunk, resume_at)
+        		resume_at += File.size(File.join(chunked_dir,'piece' + format('%02d', i.to_s)))
         		i += 1
 		rescue Kaltura::KalturaAPIError => e
 			@logger.error("Exception Class: #{e.class.name}")
