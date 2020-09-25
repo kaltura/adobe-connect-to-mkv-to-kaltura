@@ -27,6 +27,9 @@ fi
 if [ -x "`which dos2unix 2> /dev/null`" ]; then
     dos2unix $ASSET_LIST_FILE
 fi
+CAPTURE_RESOLUTION=${CAPTURE_RESOLUTION:-1280x720}
+export CAPTURE_WIDTH=$(cut -d x -f 1 <<< $CAPTURE_RESOLUTION)
+export CAPTURE_HEIGHT=$(( $(cut -d x -f 2 <<< $CAPTURE_RESOLUTION) + 147 )) # extra height to compensate for cropping
 while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORIG_CREATED_AT USER_ID LOGIN USER_NAME DURATION <&3 ;do
     set -o nounset
     CUR_XVFB=`pidof Xvfb | wc -w`
@@ -44,7 +47,7 @@ while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORI
     # remove previous locks with that MEETING_ID
     rm -f $XVFB_LOCKDIR/${MEETING_ID}_*
     export SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORIG_CREATED_AT USER_ID DURATION X_SESSION_NAME
-    nohup sh -c "xvfb-run-safe -s \"-auth /tmp/xvfb.auth -ac -screen 0 1280x720x24\" $BASEDIR/ac_new.rb " > /tmp/ac_$MEETING_ID.log 2>&1 &
+    nohup sh -c "xvfb-run-safe -s \"-auth /tmp/xvfb.auth -ac -screen 0 ${CAPTURE_WIDTH}x${CAPTURE_HEIGHT}x24\" $BASEDIR/ac_new.rb " > /tmp/ac_$MEETING_ID.log 2>&1 &
     # let's wait until xvfb-run-safe starts the X server
     X_SERVER_DISPLAY_NUM=`ls $XVFB_LOCKDIR/${MEETING_ID}_* 2>/dev/null |awk -F "_" '{print $2}'`
     while [ -z "$X_SERVER_DISPLAY_NUM" ];do

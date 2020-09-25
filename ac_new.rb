@@ -41,8 +41,6 @@ class Vconn1 < Test::Unit::TestCase
 
     @base_url = ENV['AC_ENDPOINT']
     @driver = Selenium::WebDriver.for :firefox, desired_capabilities: @caps
-    @driver.manage.window.maximize
-    #@driver.manage.window.full_screen
 
     @accept_next_alert = true
     @driver.manage.timeouts.implicit_wait = 30
@@ -82,7 +80,12 @@ class Vconn1 < Test::Unit::TestCase
     ffmpeg_bin = ENV['FFMPEG_BIN'] || 'ffmpeg'
     ffprobe_bin = ENV['FFPROBE_BIN'] || 'ffprobe'
 
-    resolution = '1280x720'
+    width = ENV['CAPTURE_WIDTH'] || '1280'
+    height = ENV['CAPTURE_HEIGHT'] || '720'
+    # .maximize and .full_screen don't seem to work in xvfb
+    @driver.manage.window.resize_to(width.to_i, height.to_i)
+
+    resolution = width + 'x' + height
     frame_rate = '30'
     audio_file = out_dir + meeting_id + '.mp3'
     recording_file = out_dir + meeting_id + '.mkv'
