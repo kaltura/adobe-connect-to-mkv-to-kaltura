@@ -76,6 +76,7 @@ class Vconn1 < Test::Unit::TestCase
     cat_name = ENV['CATEGORY_NAME']
     ac_username = ENV['AC_USERNAME']
     ac_passwd = ENV['AC_PASSWD']
+    ac_html = ENV['AC_HTML_VIEW'] || 'true'
     duration = ENV['DURATION']
     x_display = ENV['X_SERVER_DISPLAY_NUM']
     ffmpeg_bin = ENV['FFMPEG_BIN'] || 'ffmpeg'
@@ -119,7 +120,16 @@ class Vconn1 < Test::Unit::TestCase
       @driver.find_element(:id, 'pwd').send_keys ac_passwd
       @driver.find_element(:id, 'login-button').click
     end
-    @driver.get(@base_url + '/' + meeting_id + '?launcher=false&fcsContent=true&pbMode=normal')
+    @driver.get(@base_url + '/' + meeting_id + '?launcher=false&fcsContent=true&pbMode=normal&html-view=' + ac_html)
+    # html player requires a few extra actions after navigating to the page
+    if ac_html == 'true'
+      @driver.switch_to.frame('html-meeting-frame')
+      wait = Selenium::WebDriver::Wait.new(timeout: 60)
+      wait.until { @driver.find_element(:id, 'play-recording-shim-button') }.click
+      wait.until { @driver.find_element(:id, 'switch-to-classic-view-notifier_0') }.click
+      @driver.execute_script 'document.querySelector("body").style.cursor = "none"'
+    end
+
 	# this PID file is created by capture_audio.sh
 	steam_pid = out_dir + '/steam_' + meeting_id + '.pid' 
     # FFmpeg magic
