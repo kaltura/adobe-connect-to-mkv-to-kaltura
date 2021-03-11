@@ -2,7 +2,7 @@
 
 ## Abstract
 
-This code generates MKV files out of AC recordings and ingests them onto Kaltura.
+This code generates MKV files out of AC recordings and [optionally] ingests them onto Kaltura.
 
 
 **IMPORTANT NOTE: this process was tested successfully on Ubuntu 16.04 against an on-premise Adobe Connect instance. It should work equally well against Adobe's SaaS and may very well work with other modern Linux distros (though it was never tested with anything but Ubuntu 16.04 and so, its use is recommended).
