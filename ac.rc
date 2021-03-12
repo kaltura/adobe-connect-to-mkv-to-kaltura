@@ -6,7 +6,7 @@ AC_ENDPOINT=""
 AC_USERNAME=""
 AC_PASSWD=""
 # if true, use the newer HTML-based UI instead of the older Flash-based UI
-AC_HTML_VIEW="false"
+AC_HTML_VIEW="true"
 
 # num of concurrent jobs to run, should be adjusted based on available HW resources
 MAX_CONCUR_PROCS=7
