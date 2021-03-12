@@ -41,8 +41,6 @@ class Vconn1 < Test::Unit::TestCase
 
     @base_url = ENV['AC_ENDPOINT']
     @driver = Selenium::WebDriver.for :firefox, desired_capabilities: @caps
-    @driver.manage.window.maximize
-    #@driver.manage.window.full_screen
 
     @accept_next_alert = true
     @driver.manage.timeouts.implicit_wait = 30
@@ -76,12 +74,18 @@ class Vconn1 < Test::Unit::TestCase
     cat_name = ENV['CATEGORY_NAME']
     ac_username = ENV['AC_USERNAME']
     ac_passwd = ENV['AC_PASSWD']
+    ac_html = ENV['AC_HTML_VIEW'] || 'true'
     duration = ENV['DURATION']
     x_display = ENV['X_SERVER_DISPLAY_NUM']
     ffmpeg_bin = ENV['FFMPEG_BIN'] || 'ffmpeg'
     ffprobe_bin = ENV['FFPROBE_BIN'] || 'ffprobe'
 
-    resolution = '1280x720'
+    width = ENV['CAPTURE_WIDTH'] || '1280'
+    height = ENV['CAPTURE_HEIGHT'] || '720'
+    # .maximize and .full_screen don't seem to work in xvfb
+    @driver.manage.window.resize_to(width.to_i, height.to_i)
+
+    resolution = width + 'x' + height
     frame_rate = '30'
     audio_file = out_dir + meeting_id + '.mp3'
     recording_file = out_dir + meeting_id + '.mkv'
@@ -119,7 +123,16 @@ class Vconn1 < Test::Unit::TestCase
       @driver.find_element(:id, 'pwd').send_keys ac_passwd
       @driver.find_element(:id, 'login-button').click
     end
-    @driver.get(@base_url + '/' + meeting_id + '?launcher=false&fcsContent=true&pbMode=normal')
+    @driver.get(@base_url + '/' + meeting_id + '?launcher=false&fcsContent=true&pbMode=normal&html-view=' + ac_html)
+    # html player requires a few extra actions after navigating to the page
+    if ac_html == 'true'
+      @driver.switch_to.frame('html-meeting-frame')
+      wait = Selenium::WebDriver::Wait.new(timeout: 60)
+      wait.until { @driver.find_element(:id, 'play-recording-shim-button') }.click
+      wait.until { @driver.find_element(:id, 'switch-to-classic-view-notifier_0') }.click
+      @driver.execute_script 'document.querySelector("body").style.cursor = "none"'
+    end
+
 	# this PID file is created by capture_audio.sh
 	steam_pid = out_dir + '/steam_' + meeting_id + '.pid' 
     # FFmpeg magic
