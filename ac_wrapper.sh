@@ -27,9 +27,7 @@ fi
 if [ -x "`which dos2unix 2> /dev/null`" ]; then
     dos2unix $ASSET_LIST_FILE
 fi
-CAPTURE_RESOLUTION=${CAPTURE_RESOLUTION:-1280x720}
-export CAPTURE_WIDTH=$(cut -d x -f 1 <<< $CAPTURE_RESOLUTION)
-export CAPTURE_HEIGHT=$(( $(cut -d x -f 2 <<< $CAPTURE_RESOLUTION) + 147 )) # extra height to compensate for cropping
+export CAPTURE_HEIGHT=$(($CAPTURE_HEIGHT + 147)) # extra height to compensate for cropping
 while IFS=, read -r SCO_ID CATEGORY_NAME MEETING_NAME DESCRIPTION MEETING_ID ORIG_CREATED_AT USER_ID LOGIN USER_NAME DURATION <&3 ;do
     set -o nounset
     CUR_XVFB=`pidof Xvfb | wc -w`
