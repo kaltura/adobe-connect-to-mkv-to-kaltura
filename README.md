@@ -6,7 +6,7 @@ This code generates MKV files out of AC recordings and [optionally] ingests them
 
 
 **IMPORTANT NOTE: this process was tested successfully on Ubuntu 16.04 against an on-premise Adobe Connect instance. It should work equally well against Adobe's SaaS and may very well work with other modern Linux distros (though it was never tested with anything but Ubuntu 16.04 and so, its use is recommended).
-Also, more recent versions of Firefox seem to block the use of Flash entirely. For the purpose of running this tool, you should download version 60.0 from here https://ftp.mozilla.org/pub/firefox/releases/60.0/linux-x86_64/en-US/firefox-60.0.tar.bz2 rather than use what is currently available from the 16.04 official repos (71.0+build5-0ubuntu0.16.04.1 at the time of writing this).**
+Also, more recent versions of Firefox seem to block the use of Flash entirely. If you plan to use the Flash-based version of Adobe Connect, you should download Firefox 60.0 from here https://ftp.mozilla.org/pub/firefox/releases/60.0/linux-x86_64/en-US/firefox-60.0.tar.bz2 rather than use what is currently available from the 16.04 official repos (71.0+build5-0ubuntu0.16.04.1 at the time of writing this).**
 
 ## General flow
 - Download the ZIP archive and concat the audio FLVs into one MP3 using FFmpeg [this is done in order to determine the session's length so that we know how long to record using FFmpeg's x11grab]
@@ -32,6 +32,8 @@ Also, more recent versions of Firefox seem to block the use of Flash entirely. F
 When using Ubuntu or Debian, you can simply run `ac_setup_debian_ubuntu.sh` in order to complete the initial setup.
 
 ### Flash plugin
+
+**NOTE: As of 2021, the Flash-based interface for Adobe Connect has been replaced with a new HTML-based interface. If you are planning to use this newer interface, you can safely ignore this section.**
 
 In order for this to work, the Flash plugin must be loaded by Firefox.
 Download `libflashplayer.so` from Adobe and symlink to `/usr/lib/mozilla/plugins/flashplugin-alternative.so`
@@ -75,6 +77,16 @@ The code further assumes the login URL is:
 ```
 
 You may need to adjust that as well.
+
+### The `AC_HTML_VIEW` ENV var
+
+In 2020, Adobe Connect switched to a new HTML-based interface that replaces the older Flash-based one.
+As of 2021, the SaaS hosted version of Adobe Connect no longer includes the Flash-based interface.
+On-premise installations of Adobe Connect may still include the older interface, however, and this is preferable for recordings made before the switch, as there are some issues with playing older recordings in the newer interface.
+This ENV var controls whether the script attempts to use the older or newer interface.
+If set to `false` (the default), it will attempt to use the older Flash-based interface.
+If set to `true`, it will use the newer HTML-based interface.
+On newer versions of Adobe Connect, including the SaaS hosted version, it *must* be set to `true` for recordings to be properly captured.
 
 ### Generating the recording list to process
 
